@@ -1,27 +1,14 @@
-import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAppStore } from '@/store/appStore'
-import { homePathForRole, roleLabels, workspaceForRole, type Workspace } from '@/lib/permissions'
-import type { Role } from '@/types'
-import { Button } from '@/components/ui'
+import { homePathForRole, workspaceForRole, type Workspace } from '@/lib/permissions'
 import { cn } from '@/lib/format'
-import { users } from '@/mock/data'
-
-const roleOptions: Role[] = [
-  'super_admin',
-  'master_trader',
-  'manufacturer',
-  'dealer',
-  'contractor',
-  'warehouse_manager',
-  'fabricator',
-  'driver',
-  'retail',
-]
+import { Sidebar } from './Sidebar'
+import { TopBar } from './TopBar'
 
 type NavItem = { to: string; label: string }
 type ShellConfig = { title: string; nav: NavItem[]; mobile?: boolean }
 
-const SHELL_BY_WORKSPACE: Record<Workspace, ShellConfig> = {
+export const SHELL_BY_WORKSPACE: Record<Workspace, ShellConfig> = {
   buyer: {
     title: 'Buyer Workspace',
     nav: [
@@ -111,6 +98,14 @@ const SHELL_BY_WORKSPACE: Record<Workspace, ShellConfig> = {
   },
 }
 
+function resolveTopBarTitle(pathname: string, config: ShellConfig) {
+  const match = [...config.nav]
+    .sort((a, b) => b.to.length - a.to.length)
+    .find((item) => pathname === item.to || (item.to !== '/' && pathname.startsWith(`${item.to}/`)))
+  if (match) return { title: match.label, subtitle: config.title }
+  return { title: config.title, subtitle: 'Steel Cart' }
+}
+
 function Shell({
   title,
   nav,
@@ -120,84 +115,19 @@ function Shell({
   nav: NavItem[]
   mobile?: boolean
 }) {
-  const user = useAppStore((s) => s.currentUser())
-  const loginAs = useAppStore((s) => s.loginAs)
-  const logout = useAppStore((s) => s.logout)
-  const unread = useAppStore((s) =>
-    s.notifications.reduce((n, item) => (item.userId === s.currentUserId && !item.read ? n + 1 : n), 0),
-  )
-  const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const bar = resolveTopBarTitle(pathname, { title, nav, mobile })
 
-  return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)]">
-      <header className="sticky top-0 z-30 border-b border-steel-200/80 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Steel Cart</div>
-            <div className="truncate text-sm font-semibold text-steel-900">{title}</div>
+  if (mobile) {
+    return (
+      <div className="flex h-screen flex-col overflow-hidden bg-surface-card">
+        <TopBar title={bar.title} subtitle={bar.subtitle} />
+        <main className="min-h-0 flex-1 overflow-y-auto bg-surface-main">
+          <div className="mx-auto flex max-w-content flex-col gap-4 p-4 pb-24">
+            <Outlet />
           </div>
-          <button
-            onClick={() => navigate('/notifications')}
-            className="relative rounded-lg bg-steel-100 px-3 py-2 text-xs font-medium text-steel-700"
-          >
-            Alerts
-            {unread > 0 ? (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[10px] text-white">
-                {unread}
-              </span>
-            ) : null}
-          </button>
-          <select
-            className="max-w-[160px] rounded-lg border border-steel-200 bg-white px-2 py-2 text-xs"
-            value={user?.role}
-            onChange={(e) => {
-              const role = e.target.value as Role
-              const u = users.find((x) => x.role === role)
-              if (u) navigate(loginAs(u.id))
-            }}
-          >
-            {roleOptions.map((r) => (
-              <option key={r} value={r}>
-                {roleLabels[r]}
-              </option>
-            ))}
-          </select>
-          <Button variant="ghost" onClick={() => { logout(); navigate('/login') }}>
-            Logout
-          </Button>
-        </div>
-      </header>
-
-      <div className={cn('mx-auto flex max-w-7xl gap-6 px-4 py-6', mobile ? 'flex-col' : 'flex-col lg:flex-row')}>
-        {!mobile ? (
-          <aside className="hidden w-56 shrink-0 lg:block">
-            <nav className="sticky top-24 space-y-1 rounded-2xl border border-steel-200 bg-white p-3 shadow-sm">
-              {nav.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to.split('/').length <= 2}
-                  className={({ isActive }) =>
-                    cn(
-                      'block rounded-lg px-3 py-2 text-sm font-medium transition',
-                      isActive ? 'bg-steel-900 text-white' : 'text-steel-600 hover:bg-steel-50',
-                    )
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-          </aside>
-        ) : null}
-
-        <main className="min-w-0 flex-1 pb-24">
-          <Outlet />
         </main>
-      </div>
-
-      {mobile ? (
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-steel-200 bg-white/95 backdrop-blur">
+        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface-card/95 backdrop-blur-md">
           <div className="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 py-2">
             {nav.slice(0, 4).map((item) => (
               <NavLink
@@ -206,8 +136,8 @@ function Shell({
                 end={item.to.split('/').length <= 2}
                 className={({ isActive }) =>
                   cn(
-                    'rounded-lg px-2 py-2 text-center text-[11px] font-medium',
-                    isActive ? 'bg-steel-900 text-white' : 'text-steel-600',
+                    'rounded-md px-2 py-2 text-center text-[11px] font-medium transition-colors',
+                    isActive ? 'bg-brand text-white' : 'text-text-secondary',
                   )
                 }
               >
@@ -216,26 +146,42 @@ function Shell({
             ))}
           </div>
         </nav>
-      ) : (
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-steel-200 bg-white/95 backdrop-blur lg:hidden">
-          <div className="flex gap-1 overflow-x-auto px-2 py-2">
-            {nav.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  cn(
-                    'whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium',
-                    isActive ? 'bg-steel-900 text-white' : 'text-steel-600',
-                  )
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-surface-card">
+      <Sidebar nav={nav} />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <TopBar title={bar.title} subtitle={bar.subtitle} />
+        <main className="min-h-0 flex-1 overflow-y-auto bg-surface-main">
+          <div className="mx-auto flex max-w-content flex-col gap-4 p-4 pb-24 sm:p-6 lg:pb-6">
+            <Outlet />
           </div>
-        </nav>
-      )}
+        </main>
+      </div>
+
+      {/* Mobile bottom nav for desktop workspaces */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface-card/95 backdrop-blur-md lg:hidden">
+        <div className="flex gap-1 overflow-x-auto px-2 py-2">
+          {nav.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  'whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-colors',
+                  isActive ? 'bg-brand text-white' : 'text-text-secondary',
+                )
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
     </div>
   )
 }

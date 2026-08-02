@@ -13,10 +13,19 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-steel-900">{title}</h1>
-        {subtitle ? <p className="mt-1 text-sm text-steel-500">{subtitle}</p> : null}
+        <h1 className="text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">{title}</h1>
+        {subtitle ? <p className="mt-1 text-sm text-text-secondary">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+    </div>
+  )
+}
+
+/** Soft brand-tint strip for KPI rows (Koach overview pattern). */
+export function OverviewStrip({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-xl bg-surface-overview p-3.5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{children}</div>
     </div>
   )
 }
@@ -31,7 +40,14 @@ export function Card({
   onClick?: React.MouseEventHandler<HTMLDivElement>
 }) {
   return (
-    <div className={cn('rounded-xl border border-steel-200 bg-white p-4 shadow-sm', className)} onClick={onClick}>
+    <div
+      className={cn(
+        'rounded-lg border border-border bg-surface-card p-5 shadow-xs',
+        onClick && 'cursor-pointer transition-shadow duration-[180ms] hover:shadow-md',
+        className,
+      )}
+      onClick={onClick}
+    >
       {children}
     </div>
   )
@@ -47,11 +63,11 @@ export function Stat({
   hint?: string
 }) {
   return (
-    <Card>
-      <div className="text-xs font-medium uppercase tracking-wide text-steel-500">{label}</div>
-      <div className="mt-2 text-2xl font-semibold text-steel-900">{value}</div>
-      {hint ? <div className="mt-1 text-xs text-steel-400">{hint}</div> : null}
-    </Card>
+    <div className="rounded-lg border border-border bg-surface-card p-4 shadow-xs">
+      <div className="text-xs font-medium text-text-secondary">{label}</div>
+      <div className="mt-2 text-2xl font-semibold text-text-primary">{value}</div>
+      {hint ? <div className="mt-1 text-xs text-text-tertiary">{hint}</div> : null}
+    </div>
   )
 }
 
@@ -61,18 +77,19 @@ export function Button({
   className,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'
 }) {
   const styles = {
     primary: 'bg-brand text-white hover:bg-brand-dark',
     secondary: 'bg-steel-900 text-white hover:bg-steel-800',
-    ghost: 'bg-steel-100 text-steel-800 hover:bg-steel-200',
+    ghost: 'bg-surface-muted text-text-primary hover:bg-steel-200',
+    outline: 'border border-border-chrome bg-surface-card text-text-primary hover:bg-surface-muted',
     danger: 'bg-danger text-white hover:opacity-90',
   }
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center rounded-lg px-3.5 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex h-9 items-center justify-center rounded-sm px-3.5 text-sm font-medium leading-[18px] transition-colors duration-[180ms] disabled:cursor-not-allowed disabled:opacity-50',
         styles[variant],
         className,
       )}
@@ -88,7 +105,9 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={cn(
-        'w-full rounded-lg border border-steel-200 bg-white px-3 py-2 text-sm text-steel-900 outline-none ring-brand/30 placeholder:text-steel-400 focus:ring-2',
+        'h-[42px] w-full rounded-sm bg-surface-card px-3 text-sm text-text-primary outline-none placeholder:text-text-tertiary',
+        'shadow-[inset_0_0_0_1px_var(--border-chrome),0_2px_2px_0_rgba(0,0,0,0.02)]',
+        'focus:shadow-[inset_0_0_0_1.5px_var(--color-primary)]',
         props.className,
       )}
     />
@@ -100,7 +119,9 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
     <select
       {...props}
       className={cn(
-        'w-full rounded-lg border border-steel-200 bg-white px-3 py-2 text-sm text-steel-900 outline-none ring-brand/30 focus:ring-2',
+        'h-[42px] w-full rounded-sm bg-surface-card px-3 text-sm text-text-primary outline-none',
+        'shadow-[inset_0_0_0_1px_var(--border-chrome),0_2px_2px_0_rgba(0,0,0,0.02)]',
+        'focus:shadow-[inset_0_0_0_1.5px_var(--color-primary)]',
         props.className,
       )}
     />
@@ -112,7 +133,9 @@ export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
     <textarea
       {...props}
       className={cn(
-        'w-full rounded-lg border border-steel-200 bg-white px-3 py-2 text-sm text-steel-900 outline-none ring-brand/30 placeholder:text-steel-400 focus:ring-2',
+        'w-full rounded-sm bg-surface-card px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-tertiary',
+        'shadow-[inset_0_0_0_1px_var(--border-chrome),0_2px_2px_0_rgba(0,0,0,0.02)]',
+        'focus:shadow-[inset_0_0_0_1.5px_var(--color-primary)]',
         props.className,
       )}
     />
@@ -120,7 +143,7 @@ export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 export function Label({ children }: { children: ReactNode }) {
-  return <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-steel-500">{children}</label>
+  return <label className="mb-1 block text-xs font-medium text-text-secondary">{children}</label>
 }
 
 export function Badge({
@@ -131,14 +154,14 @@ export function Badge({
   tone?: 'neutral' | 'success' | 'warning' | 'danger' | 'brand'
 }) {
   const tones = {
-    neutral: 'bg-steel-100 text-steel-700',
+    neutral: 'bg-surface-muted text-text-secondary',
     success: 'bg-emerald-50 text-success',
     warning: 'bg-amber-50 text-warning',
     danger: 'bg-red-50 text-danger',
-    brand: 'bg-orange-50 text-brand',
+    brand: 'bg-surface-overview text-brand',
   }
   return (
-    <span className={cn('inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium', tones[tone])}>
+    <span className={cn('inline-flex rounded-md px-2.5 py-0.5 text-xs font-medium', tones[tone])}>
       {children}
     </span>
   )
@@ -159,8 +182,11 @@ export function StatusBadge({ status }: { status: string }) {
 export function Empty({ title, body }: { title: string; body?: string }) {
   return (
     <Card className="border-dashed text-center">
-      <div className="text-sm font-medium text-steel-700">{title}</div>
-      {body ? <p className="mt-1 text-sm text-steel-500">{body}</p> : null}
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-md bg-surface-overview text-brand">
+        <span className="text-lg font-semibold">∅</span>
+      </div>
+      <div className="text-sm font-medium text-text-primary">{title}</div>
+      {body ? <p className="mt-1 text-sm text-text-secondary">{body}</p> : null}
     </Card>
   )
 }
@@ -174,12 +200,12 @@ export function Timeline({ steps, current }: { steps: string[]; current: string 
           <span
             className={cn(
               'flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold',
-              i <= idx ? 'bg-brand text-white' : 'bg-steel-100 text-steel-400',
+              i <= idx ? 'bg-brand text-white' : 'bg-surface-muted text-text-tertiary',
             )}
           >
             {i + 1}
           </span>
-          <span className={cn('text-sm', i <= idx ? 'font-medium text-steel-900' : 'text-steel-400')}>
+          <span className={cn('text-sm', i <= idx ? 'font-medium text-text-primary' : 'text-text-tertiary')}>
             {statusLabel(step)}
           </span>
         </li>
@@ -190,9 +216,9 @@ export function Timeline({ steps, current }: { steps: string[]; current: string 
 
 export function Table({ headers, rows }: { headers: string[]; rows: ReactNode[][] }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-steel-200 bg-white">
+    <div className="overflow-x-auto rounded-lg border border-border bg-surface-card shadow-xs">
       <table className="min-w-full text-left text-sm">
-        <thead className="bg-steel-50 text-xs uppercase tracking-wide text-steel-500">
+        <thead className="bg-surface-page text-[13px] font-medium text-text-secondary">
           <tr>
             {headers.map((h) => (
               <th key={h} className="px-4 py-3 font-medium">
@@ -203,9 +229,9 @@ export function Table({ headers, rows }: { headers: string[]; rows: ReactNode[][
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-t border-steel-100">
+            <tr key={i} className="border-t border-border-section">
               {row.map((cell, j) => (
-                <td key={j} className="px-4 py-3 align-top text-steel-800">
+                <td key={j} className="px-4 py-3 align-top text-text-primary">
                   {cell}
                 </td>
               ))}
@@ -227,6 +253,15 @@ export function Field({
   return (
     <div>
       <Label>{label}</Label>
+      {children}
+    </div>
+  )
+}
+
+/** Toolbar card used above tables (search / filters / CTA). */
+export function Toolbar({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-border-section bg-surface-card p-4 shadow-xs">
       {children}
     </div>
   )

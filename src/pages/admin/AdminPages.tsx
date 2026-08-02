@@ -18,6 +18,7 @@ import {
   Empty,
   Field,
   Input,
+  OverviewStrip,
   PageHeader,
   Select,
   Stat,
@@ -57,9 +58,9 @@ export function AdminDashboard() {
   }, [orders, products])
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <PageHeader title="Operations dashboard" subtitle="Today’s sales · orders · inventory · dispatch · collections · outstanding" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <OverviewStrip>
         <Stat label="Today's Sales (demo)" value={inr(todaySales)} />
         <Stat label="Orders" value={String(orders.length)} hint={`${pending.length} pending approval`} />
         <Stat label="Outstanding" value={inr(outstanding)} />
@@ -68,8 +69,8 @@ export function AdminDashboard() {
         <Stat label="Today's dispatch" value={String(trips.filter((t) => t.status !== 'delivered').length)} />
         <Stat label="Collections due" value={inr(outstanding * 0.35)} />
         <Stat label="Warehouses" value={String(warehouses.length)} />
-      </div>
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      </OverviewStrip>
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <h3 className="mb-3 font-semibold">Top selling products</h3>
           <Table headers={['Product', 'Qty']} rows={top.map((t) => [t.name, qty(t.qty)])} />
@@ -538,14 +539,14 @@ export function AdminFinancePage() {
   const inv = invoices.find((i) => i.id === invoiceId)
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <PageHeader title="Finance" subtitle="Collections · credit · ledger · GST views" />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <OverviewStrip>
         <Stat label="Outstanding" value={inr(invoices.reduce((s, i) => s + i.amount + i.gstAmount - i.paidAmount, 0))} />
         <Stat label="Collected" value={inr(payments.reduce((s, p) => s + p.amount, 0))} />
         <Stat label="GST (invoices)" value={inr(invoices.reduce((s, i) => s + i.gstAmount, 0))} />
-      </div>
-      <Card className="mt-4">
+      </OverviewStrip>
+      <Card>
         <h3 className="font-semibold">Record collection</h3>
         <div className="mt-3 flex flex-wrap gap-3">
           <Select value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)}>
@@ -663,15 +664,15 @@ export function AdminAnalyticsPage() {
     { month: 'Aug', revenue: 31, customers: 78 },
   ]
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <PageHeader title="Analytics" subtitle="Revenue · profit · sales · cities · growth · trends · fast movers · dead stock" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <OverviewStrip>
         <Stat label="Revenue index" value="₹3.1Cr" hint="Prototype figure" />
         <Stat label="Customer growth" value="+18%" />
         <Stat label="Top city" value="Tenkasi" />
         <Stat label="Fast mover" value="Square Pipe 1″" />
-      </div>
-      <Card className="mt-4 h-80">
+      </OverviewStrip>
+      <Card className="h-80">
         <h3 className="mb-3 font-semibold">Order / revenue trend</h3>
         <ResponsiveContainer width="100%" height="85%">
           <AreaChart data={data}>

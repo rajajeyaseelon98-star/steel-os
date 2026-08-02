@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Button, Card, Field, Input, PageHeader, Select, Stat, StatusBadge, Table } from '@/components/ui'
+import { Button, Card, Field, Input, OverviewStrip, PageHeader, Select, Stat, StatusBadge, Table } from '@/components/ui'
 import { warehouses, vehicles, drivers } from '@/mock/data'
 import { useAppStore } from '@/store/appStore'
 import { formatDate, inr } from '@/lib/format'
@@ -14,12 +14,12 @@ export function WarehouseHome() {
   return (
     <div>
       <PageHeader title="Warehouse home" subtitle="Receiving · stock · dispatch · transfer · barcode" />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <OverviewStrip>
         <Stat label="Pending receiving" value={String(grns.length)} />
         <Stat label="Pending dispatch" value={String(orders.length)} />
         <Stat label="In-transit transfers" value={String(transfers.length)} />
         <Stat label="SKU locations" value={String(inventory.length)} />
-      </div>
+      </OverviewStrip>
     </div>
   )
 }
@@ -202,11 +202,11 @@ export function WarehouseReportsPage() {
   return (
     <div>
       <PageHeader title="Warehouse reports" />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <OverviewStrip>
         <Stat label="Total on hand" value={String(inventory.reduce((s, i) => s + i.onHand, 0))} />
         <Stat label="Reserved" value={String(inventory.reduce((s, i) => s + i.reserved, 0))} />
         <Stat label="Movements" value={String(movements.length)} />
-      </div>
+      </OverviewStrip>
       <Card className="mt-4">
         <Table
           headers={['When', 'Type', 'Qty', 'Ref']}

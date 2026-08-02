@@ -7,6 +7,7 @@ import {
   Empty,
   Field,
   Input,
+  OverviewStrip,
   PageHeader,
   Select,
   Stat,
@@ -361,12 +362,12 @@ export function Crm360Page() {
     <div>
       <PageHeader title={customer.companyName} subtitle={`CRM 360 · ${roleLabels[customer.role]} · ${customer.city}`} />
       {hold ? <Card className="mb-4 border-danger bg-red-50 text-danger">Credit hold — used {inr(customer.creditUsed)} / limit {inr(customer.creditLimit)}</Card> : null}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <OverviewStrip>
         <Stat label="Credit available" value={inr(availableCredit(customer))} />
         <Stat label="Orders" value={String(orders.length)} />
         <Stat label="Outstanding" value={inr(invoices.reduce((s, i) => s + i.amount + i.gstAmount - i.paidAmount, 0))} />
         <Stat label="Activities" value={String(activities.length)} />
-      </div>
+      </OverviewStrip>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card>
           <h3 className="font-semibold">Log activity / reminder</h3>

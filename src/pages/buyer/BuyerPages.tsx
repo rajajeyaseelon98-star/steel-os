@@ -7,6 +7,7 @@ import {
   Empty,
   Field,
   Input,
+  OverviewStrip,
   PageHeader,
   Select,
   Stat,
@@ -35,12 +36,12 @@ export function BuyerHome() {
         subtitle={`${user.role} · ${user.city} · Credit available ${inr(availableCredit(user))}`}
         actions={<Link to="/buyer/catalog"><Button>Browse catalog</Button></Link>}
       />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <OverviewStrip>
         <Stat label="Open orders" value={String(orders.filter((o) => !['completed', 'cancelled'].includes(o.status)).length)} />
         <Stat label="Quotations" value={String(quotations.length)} />
         <Stat label="Outstanding" value={inr(outstanding)} />
         <Stat label="Credit used" value={inr(user.creditUsed)} hint={`Limit ${inr(user.creditLimit)}`} />
-      </div>
+      </OverviewStrip>
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>
           <h3 className="font-semibold text-steel-900">Offers</h3>

@@ -1,0 +1,113 @@
+/* ============================================================
+   Steel Cart — Design tokens (Koach-shaped system, Steel Cart brand)
+   Structure mirrors koach-v2-frontend tokens; colors are Steel Cart.
+   ============================================================ */
+
+:root {
+  /* ---- Brand / Primary (steel terracotta) ---- */
+  --sc-brand-900: #7a3514;
+  --sc-brand-800: #9a4519;
+  --sc-brand-700: #c45c26; /* PRIMARY */
+  --sc-brand-600: #d4733f;
+  --sc-brand-500: #e8a06a;
+  --sc-brand-200: #f5e0d4;
+  --sc-brand-100: #fbf4ef;
+
+  /* ---- Steel neutrals (cool blue-grey) ---- */
+  --sc-steel-950: #0f1419;
+  --sc-steel-900: #1a2330;
+  --sc-steel-800: #2f3c4a;
+  --sc-steel-700: #384858;
+  --sc-steel-600: #455a6e;
+  --sc-steel-500: #5a7288;
+  --sc-steel-400: #7a90a4;
+  --sc-steel-300: #a8b6c4;
+  --sc-steel-200: #d0d8e0;
+  --sc-steel-100: #e8ecf0;
+  --sc-steel-50: #f4f6f8;
+
+  /* ---- Neutral greys (Koach chrome) ---- */
+  --sc-grey-800: #212121;
+  --sc-grey-600: #737373;
+  --sc-grey-400: #b3b3b3;
+  --sc-grey-200: #e0e0e0;
+  --sc-grey-150: #f4f4f5;
+  --sc-grey-100: #f5f5f5;
+  --sc-grey-50: #fafafa;
+  --sc-white: #ffffff;
+
+  /* ---- Semantic ---- */
+  --sc-success: #1f7a4d;
+  --sc-success-bg: #e8f5ef;
+  --sc-warning: #b7791f;
+  --sc-warning-bg: #fff5e6;
+  --sc-danger: #b33a3a;
+  --sc-danger-bg: #ffeded;
+
+  /* ---- Semantic aliases ---- */
+  --color-primary: var(--sc-brand-700);
+  --color-primary-hover: var(--sc-brand-800);
+  --color-primary-fg: #fefefe;
+  --color-primary-soft: var(--sc-brand-200);
+  --color-primary-soft-fg: var(--sc-brand-900);
+
+  --color-destructive: var(--sc-danger);
+  --color-destructive-fg: #fefefe;
+
+  --text-primary: var(--sc-grey-800);
+  --text-secondary: var(--sc-grey-600);
+  --text-tertiary: var(--sc-grey-400);
+  --text-hint: #797a7c;
+  --icon-muted: #abacad;
+
+  --surface-page: var(--sc-grey-50);
+  --surface-card: var(--sc-white);
+  --surface-muted: var(--sc-grey-100);
+  --surface-option: #f6f7f7;
+  --surface-overview: var(--sc-brand-100);
+  --surface-brand-tint: var(--sc-brand-100);
+  --surface-sidebar: #f2f0f0;
+  --surface-topbar: rgba(255, 255, 255, 0.4);
+  --surface-main: rgba(245, 245, 245, 0.4);
+  --surface-overlay: rgba(0, 0, 0, 0.2);
+
+  --border-default: #e4e4e7;
+  --border-chrome: #dedede;
+  --border-section: #e9eaea;
+  --focus-ring: var(--sc-brand-700);
+
+  --gradient-brand: linear-gradient(90deg, #c45c26, #9a4519);
+
+  /* ---- Radii (Koach: 6 / 8 / 10 / 12) ---- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 24px;
+  --radius-pill: 9999px;
+
+  /* ---- Shadows ---- */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0px 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px -8px rgba(0, 0, 0, 0.12);
+  --shadow-input: inset 0 0 0 1px var(--border-chrome), 0 2px 2px 0 rgba(0, 0, 0, 0.02);
+
+  /* ---- Layout chrome ---- */
+  --sidebar-width: 248px;
+  --sidebar-width-collapsed: 72px;
+  --topbar-height: 56px;
+  --content-max: 1200px;
+
+  /* ---- Motion ---- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+
+  /* ---- Typography ---- */
+  --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --fs-body: 14px;
+}

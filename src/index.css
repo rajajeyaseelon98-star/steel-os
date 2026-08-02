@@ -1,6 +1,8 @@
 @import "tailwindcss";
+@import "./styles/tokens.css";
 
 @theme {
+  /* Backward-compatible Steel Cart scale */
   --color-steel-50: #f4f6f8;
   --color-steel-100: #e8ecf0;
   --color-steel-200: #d0d8e0;
@@ -12,14 +14,54 @@
   --color-steel-800: #2f3c4a;
   --color-steel-900: #1a2330;
   --color-steel-950: #0f1419;
-  --color-brand: #c45c26;
-  --color-brand-dark: #9a4519;
+  --color-brand: var(--sc-brand-700);
+  --color-brand-dark: var(--sc-brand-800);
   --color-brand-light: #e8a06a;
   --color-success: #1f7a4d;
   --color-warning: #b7791f;
   --color-danger: #b33a3a;
-  --font-display: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif;
-  --font-body: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif;
+
+  /* Koach-shaped semantic tokens → Tailwind utilities */
+  --color-primary: var(--sc-brand-700);
+  --color-primary-hover: var(--sc-brand-800);
+  --color-surface-page: var(--surface-page);
+  --color-surface-card: var(--surface-card);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-overview: var(--surface-overview);
+  --color-surface-sidebar: var(--surface-sidebar);
+  --color-surface-topbar: var(--surface-topbar);
+  --color-surface-main: var(--surface-main);
+  --color-surface-option: var(--surface-option);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-hint: var(--text-hint);
+  --color-border: var(--border-default);
+  --color-border-chrome: var(--border-chrome);
+  --color-border-section: var(--border-section);
+  --color-focus: var(--focus-ring);
+
+  --font-sans: var(--font-body);
+  --font-display: 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 24px;
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0px 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px -8px rgba(0, 0, 0, 0.12);
+
+  --width-sidebar: 248px;
+  --width-sidebar-collapsed: 72px;
+  --max-width-content: 1200px;
+
+  --breakpoint-lg: 1024px;
 }
 
 * {
@@ -30,13 +72,15 @@ html,
 body,
 #root {
   min-height: 100%;
+  height: 100%;
 }
 
 body {
   margin: 0;
   font-family: var(--font-body);
-  background: linear-gradient(165deg, #1a2330 0%, #2f3c4a 40%, #455a6e 100%);
-  color: #1a2330;
+  font-size: var(--fs-body);
+  background: var(--surface-page);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -45,6 +89,6 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #7a90a4;
-  border-radius: 4px;
+  background: var(--sc-steel-400);
+  border-radius: var(--radius-xs);
 }
