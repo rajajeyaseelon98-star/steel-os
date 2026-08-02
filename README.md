@@ -39,6 +39,7 @@ npm run dev
 
 ## Docs
 
+- [`docs/flows/00-INDEX.md`](./docs/flows/00-INDEX.md) — **user-wise & feature flowcharts** (Mermaid, implemented only)
 - `STEEL-OS-END-TO-END-PLAN.md` — full A→Z product plan  
 - `STEEL-OS-KT-DETAIL.md` — KT / completed vs pending status (use this to stay on scope)
 

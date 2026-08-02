@@ -12,6 +12,7 @@
 | **Repo** | https://github.com/rajajeyaseelon98-star/steel-os |
 | **Local path** | `C:\Users\Lenovo\steel cart\steel-os` |
 | **Master plan** | `STEEL-OS-END-TO-END-PLAN.md` |
+| **User/feature flows** | `docs/flows/00-INDEX.md` (Mermaid, implemented-only) |
 | **Stack (locked)** | React + TypeScript + Vite + React Router + Zustand + Tailwind CSS v4 + Recharts |
 | **Not Next.js** | Explicitly React SPA only |
 
@@ -231,6 +232,8 @@ Stay disciplined: these are the only open items unless the stakeholder changes s
 ---
 
 ## 7. How to demo (Part Q script — keep this)
+
+Step-by-step Mermaid flows (role + feature): **`docs/flows/00-INDEX.md`**.
 
 1. Frame: “Not a shop — steel distribution OS for South TN.”  
 2. **Dealer** → reorder square pipes (note special price if seeded).  
