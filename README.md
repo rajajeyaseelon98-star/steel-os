@@ -37,6 +37,11 @@ npm run dev
 7. Admin → finance / pricing  
 8. Admin → G+1 estimator  
 
+## Docs
+
+- `STEEL-OS-END-TO-END-PLAN.md` — full A→Z product plan  
+- `STEEL-OS-KT-DETAIL.md` — KT / completed vs pending status (use this to stay on scope)
+
 ## Phases covered
 
 | Phase | Status |
