@@ -1,4 +1,4 @@
-# Steel OS — KT Detail Document (Knowledge Transfer)
+# Steel Cart — KT Detail Document (Knowledge Transfer)
 
 > **Purpose:** Living KT / status source of truth for this project.  
 > Continue work **in the current Cursor chat/session**. Use this doc + `STEEL-OS-END-TO-END-PLAN.md` so we do not deviate from agreed scope.  
@@ -8,7 +8,7 @@
 |---|---|
 | **Document type** | KT / status handoff (in-session) |
 | **Document date** | 2026-08-02 |
-| **Product** | Steel OS — South Tamil Nadu steel + fabrication B2B operating system **prototype** (not production ERP) |
+| **Product** | Steel Cart — South Tamil Nadu steel + fabrication B2B operating system **prototype** (not production ERP) |
 | **Repo** | https://github.com/rajajeyaseelon98-star/steel-os |
 | **Local path** | `C:\Users\Lenovo\steel cart\steel-os` |
 | **Master plan** | `STEEL-OS-END-TO-END-PLAN.md` |

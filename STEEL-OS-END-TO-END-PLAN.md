@@ -1,4 +1,4 @@
-# Steel OS — Perfect A-to-Z End-to-End Prototype Plan
+# Steel Cart — Perfect A-to-Z End-to-End Prototype Plan
 
 > **Product thesis:**  
 > *"If we become the largest steel distributor in South Tamil Nadu, what would our operating system look like?"*
@@ -12,7 +12,7 @@
 
 | Field | Value |
 |---|---|
-| Document name | Steel OS End-to-End Plan |
+| Document name | Steel Cart End-to-End Plan |
 | Purpose | Complete A→Z blueprint for UI prototype (not production software) |
 | Region focus | South Tamil Nadu |
 | Primary goal | Validate operating model via clickable user journeys |
@@ -40,7 +40,7 @@ A multi-role digital platform that connects the entire steel distribution ecosys
 ────────────────────────────────────────────────────────────
                 Fabrication Partners
 ────────────────────────────────────────────────────────────
-                   Digital Platform (Steel OS)
+                   Digital Platform (Steel Cart)
 ────────────────────────────────────────────────────────────
 Dealers · Hardware Shops · Welders · Contractors
 Builders · Retail Customers · Transporters
@@ -173,7 +173,7 @@ Every user path must support:
 Prototype strategy: **one web app + role switcher**, not five codebases.
 
 ```text
-Steel OS (Web Prototype)
+Steel Cart (Web Prototype)
 ├── Auth + Role Gate
 ├── Workspace: Buyer (Dealer / Contractor / Retail)
 ├── Workspace: Operations (Master Trader / Super Admin)
@@ -1731,7 +1731,7 @@ Site need (G+1 Sankarankovil)
   → Fabrication partners (gates/railings)
 ```
 
-This is how Steel OS becomes different from every local steel dealer.
+This is how Steel Cart becomes different from every local steel dealer.
 
 ---
 
@@ -1920,4 +1920,4 @@ Use this to confirm nothing from the source brief is missing.
 
 ---
 
-*End of Steel OS A-to-Z End-to-End Plan*
+*End of Steel Cart A-to-Z End-to-End Plan*

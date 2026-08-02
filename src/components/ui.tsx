@@ -24,12 +24,14 @@ export function PageHeader({
 export function Card({
   children,
   className,
+  onClick,
 }: {
   children: ReactNode
   className?: string
+  onClick?: React.MouseEventHandler<HTMLDivElement>
 }) {
   return (
-    <div className={cn('rounded-xl border border-steel-200 bg-white p-4 shadow-sm', className)}>
+    <div className={cn('rounded-xl border border-steel-200 bg-white p-4 shadow-sm', className)} onClick={onClick}>
       {children}
     </div>
   )

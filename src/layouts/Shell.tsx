@@ -1,6 +1,6 @@
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/store/appStore'
-import { homePathForRole, roleLabels } from '@/lib/permissions'
+import { homePathForRole, roleLabels, workspaceForRole, type Workspace } from '@/lib/permissions'
 import type { Role } from '@/types'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/format'
@@ -18,13 +18,106 @@ const roleOptions: Role[] = [
   'retail',
 ]
 
+type NavItem = { to: string; label: string }
+type ShellConfig = { title: string; nav: NavItem[]; mobile?: boolean }
+
+const SHELL_BY_WORKSPACE: Record<Workspace, ShellConfig> = {
+  buyer: {
+    title: 'Buyer Workspace',
+    nav: [
+      { to: '/buyer', label: 'Home' },
+      { to: '/buyer/catalog', label: 'Catalog' },
+      { to: '/search', label: 'Search' },
+      { to: '/buyer/quotations', label: 'Quotations' },
+      { to: '/buyer/orders', label: 'Orders' },
+      { to: '/buyer/payments', label: 'Payments' },
+      { to: '/buyer/fabrication', label: 'Fabrication' },
+      { to: '/buyer/addresses', label: 'Addresses' },
+      { to: '/buyer/wishlist', label: 'Wishlist' },
+      { to: '/profile', label: 'Profile' },
+      { to: '/settings', label: 'Settings' },
+      { to: '/support', label: 'Support' },
+    ],
+  },
+  admin: {
+    title: 'Operations Console',
+    nav: [
+      { to: '/admin', label: 'Dashboard' },
+      { to: '/search', label: 'Search' },
+      { to: '/admin/orders', label: 'Orders' },
+      { to: '/admin/quotations', label: 'Quotations' },
+      { to: '/admin/products', label: 'Products' },
+      { to: '/admin/catalog-meta', label: 'Categories' },
+      { to: '/admin/pricing', label: 'Pricing' },
+      { to: '/admin/special-pricing', label: 'Special $' },
+      { to: '/admin/inventory', label: 'Inventory' },
+      { to: '/admin/purchase', label: 'Purchase' },
+      { to: '/admin/vendors', label: 'Vendors' },
+      { to: '/admin/transport', label: 'Transport' },
+      { to: '/admin/finance', label: 'Finance' },
+      { to: '/admin/crm', label: 'CRM' },
+      { to: '/admin/reports', label: 'Reports' },
+      { to: '/admin/analytics', label: 'Analytics' },
+      { to: '/admin/ai', label: 'AI Insights' },
+      { to: '/admin/estimator', label: 'Estimator' },
+      { to: '/admin/hr', label: 'HR' },
+      { to: '/admin/users', label: 'Users' },
+      { to: '/admin/audit', label: 'Audit' },
+      { to: '/admin/settings', label: 'Settings' },
+    ],
+  },
+  warehouse: {
+    title: 'Warehouse App',
+    mobile: true,
+    nav: [
+      { to: '/warehouse', label: 'Home' },
+      { to: '/warehouse/receiving', label: 'Receiving' },
+      { to: '/warehouse/stock', label: 'Stock' },
+      { to: '/warehouse/dispatch', label: 'Dispatch' },
+      { to: '/warehouse/transfers', label: 'Transfer' },
+      { to: '/warehouse/scan', label: 'Barcode' },
+      { to: '/warehouse/reports', label: 'Reports' },
+    ],
+  },
+  fabricator: {
+    title: 'Fabricator App',
+    mobile: true,
+    nav: [
+      { to: '/fabricator', label: 'Leads' },
+      { to: '/fabricator/quotes', label: 'Quotes' },
+      { to: '/fabricator/jobs', label: 'Jobs' },
+      { to: '/fabricator/payments', label: 'Payments' },
+      { to: '/fabricator/reviews', label: 'Reviews' },
+      { to: '/profile', label: 'Profile' },
+    ],
+  },
+  driver: {
+    title: 'Driver App',
+    mobile: true,
+    nav: [
+      { to: '/driver', label: 'Today' },
+      { to: '/driver/history', label: 'History' },
+      { to: '/profile', label: 'Profile' },
+    ],
+  },
+  manufacturer: {
+    title: 'Manufacturer Portal',
+    nav: [
+      { to: '/manufacturer', label: 'Home' },
+      { to: '/profile', label: 'Profile' },
+      { to: '/settings', label: 'Settings' },
+      { to: '/support', label: 'Support' },
+    ],
+  },
+}
+
 function Shell({
   title,
   nav,
   mobile,
 }: {
   title: string
-  nav: { to: string; label: string }[]
+  nav: NavItem[]
   mobile?: boolean
 }) {
   const user = useAppStore((s) => s.currentUser())
@@ -40,7 +133,7 @@ function Shell({
       <header className="sticky top-0 z-30 border-b border-steel-200/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Steel OS</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Steel Cart</div>
             <div className="truncate text-sm font-semibold text-steel-900">{title}</div>
           </div>
           <button
@@ -148,137 +241,53 @@ function Shell({
 }
 
 export function BuyerLayout() {
-  return (
-    <Shell
-      title="Buyer Workspace"
-      nav={[
-        { to: '/buyer', label: 'Home' },
-        { to: '/buyer/catalog', label: 'Catalog' },
-        { to: '/search', label: 'Search' },
-        { to: '/buyer/quotations', label: 'Quotations' },
-        { to: '/buyer/orders', label: 'Orders' },
-        { to: '/buyer/payments', label: 'Payments' },
-        { to: '/buyer/fabrication', label: 'Fabrication' },
-        { to: '/buyer/addresses', label: 'Addresses' },
-        { to: '/buyer/wishlist', label: 'Wishlist' },
-        { to: '/profile', label: 'Profile' },
-        { to: '/settings', label: 'Settings' },
-        { to: '/support', label: 'Support' },
-      ]}
-    />
-  )
+  return <Shell {...SHELL_BY_WORKSPACE.buyer} />
 }
 
 export function AdminLayout() {
-  return (
-    <Shell
-      title="Operations Console"
-      nav={[
-        { to: '/admin', label: 'Dashboard' },
-        { to: '/search', label: 'Search' },
-        { to: '/admin/orders', label: 'Orders' },
-        { to: '/admin/quotations', label: 'Quotations' },
-        { to: '/admin/products', label: 'Products' },
-        { to: '/admin/catalog-meta', label: 'Categories' },
-        { to: '/admin/pricing', label: 'Pricing' },
-        { to: '/admin/special-pricing', label: 'Special $' },
-        { to: '/admin/inventory', label: 'Inventory' },
-        { to: '/admin/purchase', label: 'Purchase' },
-        { to: '/admin/vendors', label: 'Vendors' },
-        { to: '/admin/transport', label: 'Transport' },
-        { to: '/admin/finance', label: 'Finance' },
-        { to: '/admin/crm', label: 'CRM' },
-        { to: '/admin/reports', label: 'Reports' },
-        { to: '/admin/analytics', label: 'Analytics' },
-        { to: '/admin/ai', label: 'AI Insights' },
-        { to: '/admin/estimator', label: 'Estimator' },
-        { to: '/admin/hr', label: 'HR' },
-        { to: '/admin/users', label: 'Users' },
-        { to: '/admin/audit', label: 'Audit' },
-        { to: '/admin/settings', label: 'Settings' },
-      ]}
-    />
-  )
+  return <Shell {...SHELL_BY_WORKSPACE.admin} />
 }
 
 export function WarehouseLayout() {
-  return (
-    <Shell
-      title="Warehouse App"
-      mobile
-      nav={[
-        { to: '/warehouse', label: 'Home' },
-        { to: '/warehouse/receiving', label: 'Receiving' },
-        { to: '/warehouse/stock', label: 'Stock' },
-        { to: '/warehouse/dispatch', label: 'Dispatch' },
-        { to: '/warehouse/transfers', label: 'Transfer' },
-        { to: '/warehouse/scan', label: 'Barcode' },
-        { to: '/warehouse/reports', label: 'Reports' },
-      ]}
-    />
-  )
+  return <Shell {...SHELL_BY_WORKSPACE.warehouse} />
 }
 
 export function FabricatorLayout() {
-  return (
-    <Shell
-      title="Fabricator App"
-      mobile
-      nav={[
-        { to: '/fabricator', label: 'Leads' },
-        { to: '/fabricator/quotes', label: 'Quotes' },
-        { to: '/fabricator/jobs', label: 'Jobs' },
-        { to: '/fabricator/payments', label: 'Payments' },
-        { to: '/fabricator/reviews', label: 'Reviews' },
-        { to: '/profile', label: 'Profile' },
-      ]}
-    />
-  )
+  return <Shell {...SHELL_BY_WORKSPACE.fabricator} />
 }
 
 export function DriverLayout() {
-  return (
-    <Shell
-      title="Driver App"
-      mobile
-      nav={[
-        { to: '/driver', label: 'Today' },
-        { to: '/driver/history', label: 'History' },
-        { to: '/profile', label: 'Profile' },
-      ]}
-    />
-  )
+  return <Shell {...SHELL_BY_WORKSPACE.driver} />
 }
 
 export function ManufacturerLayout() {
-  return (
-    <Shell
-      title="Manufacturer Portal"
-      nav={[
-        { to: '/manufacturer', label: 'Home' },
-        { to: '/profile', label: 'Profile' },
-        { to: '/settings', label: 'Settings' },
-        { to: '/support', label: 'Support' },
-      ]}
-    />
-  )
+  return <Shell {...SHELL_BY_WORKSPACE.manufacturer} />
+}
+
+/** Shared routes (/search, /profile, …) keep sticky Shell chrome for the current role. */
+export function RoleWorkspaceShell() {
+  const user = useAppStore((s) => s.currentUser())
+  if (!user) return <Navigate to="/login" replace />
+  return <Shell {...SHELL_BY_WORKSPACE[workspaceForRole(user.role)]} />
 }
 
 export function AuthLayout() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#c45c2640,transparent_35%),radial-gradient(circle_at_80%_0%,#7a90a455,transparent_30%),linear-gradient(160deg,#0f1419,#1a2330_45%,#2f3c4a)]" />
-      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-4 py-10">
-        <div className="mb-8">
-          <div className="text-sm font-semibold uppercase tracking-[0.35em] text-brand-light">Steel OS</div>
-          <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+      <div className="relative mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-4 py-10 md:grid-cols-2">
+        <div>
+          <div className="text-sm font-semibold uppercase tracking-[0.35em] text-brand-light">Steel Cart</div>
+          <h1 className="mt-3 max-w-xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
             South Tamil Nadu steel distribution operating system
           </h1>
-          <p className="mt-3 max-w-xl text-steel-300">
+          <p className="mt-3 max-w-md text-steel-300">
             Prototype for dealers, contractors, warehouses, fabricators, and transport — not a shop app.
           </p>
         </div>
-        <Outlet />
+        <div className="w-full md:justify-self-end md:max-w-md">
+          <Outlet />
+        </div>
       </div>
     </div>
   )

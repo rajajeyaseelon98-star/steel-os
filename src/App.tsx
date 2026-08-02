@@ -7,6 +7,7 @@ import {
   FabricatorLayout,
   ManufacturerLayout,
   RoleHomeRedirect,
+  RoleWorkspaceShell,
   WarehouseLayout,
 } from '@/layouts/Shell'
 import { useAppStore } from '@/store/appStore'
@@ -102,12 +103,6 @@ function Guard({
   if (!user) return <Navigate to="/login" replace />
   const ws = workspaceForRole(user.role)
   if (!allow.includes(ws)) return <Navigate to={ws === 'manufacturer' ? '/manufacturer' : `/${ws}`} replace />
-  return children
-}
-
-function Authed({ children }: { children: React.ReactNode }) {
-  const user = useAppStore((s) => s.currentUser())
-  if (!user) return <Navigate to="/login" replace />
   return children
 }
 
@@ -243,11 +238,13 @@ export default function App() {
         <Route path="history" element={<DriverHistoryPage />} />
       </Route>
 
-      <Route path="/notifications" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)]"><NotificationsPage /></div></Authed>} />
-      <Route path="/support" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)]"><SupportPage /></div></Authed>} />
-      <Route path="/profile" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)] p-4"><div className="mx-auto max-w-5xl"><ProfilePage /></div></div></Authed>} />
-      <Route path="/settings" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)] p-4"><div className="mx-auto max-w-5xl"><UserSettingsPage /></div></div></Authed>} />
-      <Route path="/search" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)] p-4"><div className="mx-auto max-w-5xl"><GlobalSearchPage /></div></div></Authed>} />
+      <Route element={<RoleWorkspaceShell />}>
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/support" element={<SupportPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/settings" element={<UserSettingsPage />} />
+        <Route path="/search" element={<GlobalSearchPage />} />
+      </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

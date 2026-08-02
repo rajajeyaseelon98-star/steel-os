@@ -97,7 +97,7 @@ export const users: User[] = [
     email: 'admin@steelos.in',
     phone: '9876500001',
     role: 'super_admin',
-    companyName: 'Steel OS Platform',
+    companyName: 'Steel Cart Platform',
     gstin: '33AABCU9603R1ZM',
     verificationStatus: 'verified',
     creditLimit: 0,
