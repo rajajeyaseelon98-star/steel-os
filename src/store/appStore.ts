@@ -1,4 +1,5 @@
-import { create } from 'zustand'
+import { createWithEqualityFn } from 'zustand/traditional'
+import { shallow } from 'zustand/shallow'
 import { persist } from 'zustand/middleware'
 import type {
   AttendanceRecord,
@@ -56,6 +57,7 @@ import {
 } from '@/mock/data'
 import { orderTotals, resolveUnitPrice } from '@/lib/pricing'
 import { homePathForRole } from '@/lib/permissions'
+import { useExtrasStore } from '@/store/extrasStore'
 
 function now() {
   return new Date().toISOString()
@@ -115,6 +117,9 @@ interface AppState {
   sendQuotation: (id: string) => void
   acceptQuotation: (id: string) => Order | null
   rejectQuotation: (id: string) => void
+  reviseQuotation: (id: string, items?: Quotation['items'], notes?: string) => void
+  expireQuotation: (id: string) => void
+  updateQuotationItems: (id: string, items: Quotation['items']) => void
 
   createOrder: (input: {
     customerId: string
@@ -125,6 +130,9 @@ interface AppState {
   updateOrderStatus: (id: string, status: OrderStatus) => void
   approveOrder: (id: string) => void
   cancelOrder: (id: string) => void
+  requestReturn: (id: string) => void
+  refundOrder: (id: string) => void
+  partialDispatchOrder: (orderId: string, vehicleId: string, driverId: string) => DeliveryTrip | null
 
   reserveStock: (order: Order) => void
   releaseStock: (order: Order) => void
@@ -143,6 +151,9 @@ interface AppState {
   createFabRequest: (input: Omit<FabricationRequest, 'id' | 'number' | 'status' | 'createdAt'>) => void
   addFabQuote: (input: Omit<FabricationQuote, 'id' | 'status' | 'createdAt'>) => void
   selectFabQuote: (requestId: string, quoteId: string) => void
+  advanceFabJob: (jobId: string) => void
+  payFabJob: (jobId: string, mode?: 'partial' | 'paid') => void
+  reviewFabJob: (jobId: string, rating: number, comment: string) => void
 
   recordPayment: (input: {
     customerId: string
@@ -159,9 +170,10 @@ interface AppState {
   updateCompany: (patch: Partial<CompanySettings>) => void
 
   estimatorBom: (city: string, floors: number) => { productId: string; qty: number; reason: string }[]
+  reserveEstimatorBom: (bom: { productId: string; qty: number }[], warehouseId: string) => void
 }
 
-export const useAppStore = create<AppState>()(
+export const useAppStore = createWithEqualityFn<AppState>()(
   persist(
     (set, get) => ({
       users: usersSeed,
@@ -280,12 +292,16 @@ export const useAppStore = create<AppState>()(
 
       createQuotation: (input) => {
         const user = get().currentUser()
+        const selfServe =
+          !!user &&
+          user.id === input.customerId &&
+          ['dealer', 'contractor', 'retail'].includes(user.role)
         const q: Quotation = {
           id: uid('q'),
           number: `QT-2026-${String(get().quotations.length + 1).padStart(3, '0')}`,
           customerId: input.customerId,
           createdBy: user?.id ?? 'u-trader',
-          status: 'draft',
+          status: selfServe ? 'sent' : 'draft',
           items: input.items,
           validityDate: input.validityDate,
           notes: input.notes,
@@ -293,6 +309,15 @@ export const useAppStore = create<AppState>()(
           createdAt: now(),
         }
         set((s) => ({ quotations: [q, ...s.quotations] }))
+        if (selfServe) {
+          get().addNotification({
+            userId: 'u-trader',
+            title: 'Customer quotation request',
+            body: `${q.number} sent for review / acceptance`,
+            channel: 'in_app',
+            link: `/admin/quotations`,
+          })
+        }
         return q
       },
 
@@ -314,12 +339,20 @@ export const useAppStore = create<AppState>()(
 
       acceptQuotation: (id) => {
         const q = get().quotations.find((x) => x.id === id)
-        if (!q || (q.status !== 'sent' && q.status !== 'revised')) return null
+        if (!q) return null
+        // Allow sent/revised/accepted; draft self-serve gets sent first
+        if (!['sent', 'revised', 'accepted', 'draft'].includes(q.status)) return null
+        if (q.status === 'draft') {
+          set((s) => ({
+            quotations: s.quotations.map((x) => (x.id === id ? { ...x, status: 'sent' } : x)),
+          }))
+        }
+        const fresh = get().quotations.find((x) => x.id === id)!
         const order = get().createOrder({
-          customerId: q.customerId,
-          quotationId: q.id,
-          notes: q.notes,
-          items: q.items.map((item) => {
+          customerId: fresh.customerId,
+          quotationId: fresh.id,
+          notes: fresh.notes,
+          items: fresh.items.map((item) => {
             const product = get().getProduct(item.productId)!
             return {
               ...item,
@@ -341,6 +374,34 @@ export const useAppStore = create<AppState>()(
         }))
       },
 
+      reviseQuotation: (id, items, notes) => {
+        set((s) => ({
+          quotations: s.quotations.map((q) =>
+            q.id === id
+              ? {
+                  ...q,
+                  status: 'revised',
+                  items: items ?? q.items,
+                  notes: notes ?? q.notes,
+                  validityDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+                }
+              : q,
+          ),
+        }))
+      },
+
+      expireQuotation: (id) => {
+        set((s) => ({
+          quotations: s.quotations.map((q) => (q.id === id ? { ...q, status: 'expired' } : q)),
+        }))
+      },
+
+      updateQuotationItems: (id, items) => {
+        set((s) => ({
+          quotations: s.quotations.map((q) => (q.id === id ? { ...q, items } : q)),
+        }))
+      },
+
       createOrder: (input) => {
         const user = get().currentUser()
         const order: Order = {
@@ -358,6 +419,13 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ orders: [order, ...s.orders] }))
         get().addNotification({
           userId: 'u-trader',
+          title: 'New order',
+          body: `${order.number} awaiting approval`,
+          channel: 'in_app',
+          link: `/admin/orders/${order.id}`,
+        })
+        get().addNotification({
+          userId: 'u-admin',
           title: 'New order',
           body: `${order.number} awaiting approval`,
           channel: 'in_app',
@@ -424,6 +492,63 @@ export const useAppStore = create<AppState>()(
           get().releaseStock(order)
         }
         get().updateOrderStatus(id, 'cancelled')
+      },
+
+      requestReturn: (id) => {
+        get().updateOrderStatus(id, 'return_requested')
+        const order = get().orders.find((o) => o.id === id)
+        if (order) {
+          get().addNotification({
+            userId: 'u-trader',
+            title: 'Return requested',
+            body: `${order.number} return requested`,
+            channel: 'in_app',
+            link: `/admin/orders/${order.id}`,
+          })
+        }
+      },
+
+      refundOrder: (id) => {
+        const order = get().orders.find((o) => o.id === id)
+        if (!order) return
+        const inv = get().invoices.find((i) => i.orderId === id)
+        if (inv) {
+          set((s) => ({
+            invoices: s.invoices.map((i) =>
+              i.id === inv.id ? { ...i, paidAmount: i.amount + i.gstAmount, status: 'paid' } : i,
+            ),
+            ledger: [
+              {
+                id: uid('led'),
+                customerId: order.customerId,
+                type: 'credit',
+                amount: inv.amount + inv.gstAmount - inv.paidAmount,
+                ref: `REFUND-${inv.number}`,
+                at: now(),
+                note: 'Order refunded',
+              },
+              ...s.ledger,
+            ],
+            users: s.users.map((u) =>
+              u.id === order.customerId
+                ? { ...u, creditUsed: Math.max(0, u.creditUsed - (inv.amount + inv.gstAmount - inv.paidAmount)) }
+                : u,
+            ),
+          }))
+        }
+        get().updateOrderStatus(id, 'refunded')
+      },
+
+      partialDispatchOrder: (orderId, vehicleId, driverId) => {
+        const order = get().orders.find((o) => o.id === orderId)
+        if (!order || order.status !== 'approved') return null
+        const trip = get().dispatchOrder(orderId, vehicleId, driverId)
+        set((s) => ({
+          orders: s.orders.map((o) =>
+            o.id === orderId ? { ...o, status: 'partially_dispatched', updatedAt: now() } : o,
+          ),
+        }))
+        return trip
       },
 
       reserveStock: (order) => {
@@ -764,6 +889,43 @@ export const useAppStore = create<AppState>()(
         }))
       },
 
+      advanceFabJob: (jobId) => {
+        const job = get().fabricationJobs.find((j) => j.id === jobId)
+        if (!job) return
+        const next =
+          job.status === 'accepted' ? 'in_progress' : job.status === 'in_progress' ? 'completed' : null
+        if (!next) return
+        set((s) => ({
+          fabricationJobs: s.fabricationJobs.map((j) => (j.id === jobId ? { ...j, status: next } : j)),
+          fabricationRequests: s.fabricationRequests.map((r) =>
+            r.id === job.requestId
+              ? { ...r, status: next === 'in_progress' ? 'in_progress' : 'completed' }
+              : r,
+          ),
+        }))
+      },
+
+      payFabJob: (jobId, mode = 'paid') => {
+        set((s) => ({
+          fabricationJobs: s.fabricationJobs.map((j) =>
+            j.id === jobId ? { ...j, paymentStatus: mode } : j,
+          ),
+          fabricationRequests: s.fabricationRequests.map((r) => {
+            const job = s.fabricationJobs.find((j) => j.id === jobId)
+            if (!job || r.id !== job.requestId) return r
+            return mode === 'paid' ? { ...r, status: 'paid' } : r
+          }),
+        }))
+      },
+
+      reviewFabJob: (jobId, rating, comment) => {
+        set((s) => ({
+          fabricationJobs: s.fabricationJobs.map((j) =>
+            j.id === jobId ? { ...j, review: { rating, comment } } : j,
+          ),
+        }))
+      },
+
       recordPayment: ({ customerId, invoiceId, amount, method, note }) => {
         const payment: Payment = {
           id: uid('pay'),
@@ -855,6 +1017,29 @@ export const useAppStore = create<AppState>()(
           { productId: 'p-acc-hinge', qty: 4, reason: 'Gate hardware' },
         ]
       },
+
+      reserveEstimatorBom: (bom, warehouseId) => {
+        set((s) => ({
+          inventory: s.inventory.map((row) => {
+            const item = bom.find((b) => b.productId === row.productId && row.warehouseId === warehouseId)
+            if (!item) return row
+            return { ...row, reserved: row.reserved + item.qty }
+          }),
+          stockMovements: [
+            ...bom.map((b) => ({
+              id: uid('sm'),
+              productId: b.productId,
+              warehouseId,
+              type: 'reserve' as const,
+              qty: b.qty,
+              ref: 'ESTIMATOR',
+              at: now(),
+              note: 'Reserved from G+ estimator',
+            })),
+            ...s.stockMovements,
+          ],
+        }))
+      },
     }),
     {
       name: 'steel-os-prototype',
@@ -884,10 +1069,20 @@ export const useAppStore = create<AppState>()(
       }),
     },
   ),
+  shallow,
 )
 
 export function usePriceForProduct(product: Product) {
-  const user = useAppStore((s) => s.currentUser())
-  const role = user?.role ?? 'retail'
-  return resolveUnitPrice(product, role)
+  const userId = useAppStore((s) => s.currentUserId)
+  const role = useAppStore((s) => s.users.find((u) => u.id === s.currentUserId)?.role ?? 'retail')
+  const special = useExtrasStore((s) => {
+    if (!userId) return null
+    const row = s.specialPrices.find((p) => p.customerId === userId && p.productId === product.id)
+    return row?.price ?? null
+  })
+  return resolveUnitPrice(
+    product,
+    role as import('@/types').Role,
+    { specialPrice: special },
+  )
 }

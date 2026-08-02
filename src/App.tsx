@@ -5,6 +5,7 @@ import {
   BuyerLayout,
   DriverLayout,
   FabricatorLayout,
+  ManufacturerLayout,
   RoleHomeRedirect,
   WarehouseLayout,
 } from '@/layouts/Shell'
@@ -75,6 +76,19 @@ import {
   WarehouseStockPage,
   WarehouseTransfersPage,
 } from '@/pages/ops/OpsPages'
+import {
+  AddressBookPage,
+  AdminCatalogMetaPage,
+  AdminOrderDetailPage,
+  AuditLogPage,
+  Crm360Page,
+  GlobalSearchPage,
+  InvoiceDetailPage,
+  ManufacturerPortalPage,
+  ReportDetailPage,
+  SpecialPricingPage,
+  UserSettingsPage,
+} from '@/pages/gaps/GapPages'
 import { workspaceForRole } from '@/lib/permissions'
 
 function Guard({
@@ -87,7 +101,7 @@ function Guard({
   const user = useAppStore((s) => s.currentUser())
   if (!user) return <Navigate to="/login" replace />
   const ws = workspaceForRole(user.role)
-  if (!allow.includes(ws)) return <Navigate to={`/${ws}`} replace />
+  if (!allow.includes(ws)) return <Navigate to={ws === 'manufacturer' ? '/manufacturer' : `/${ws}`} replace />
   return children
 }
 
@@ -131,8 +145,10 @@ export default function App() {
         <Route path="quotations/:id" element={<QuotationDetailPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="orders/:id" element={<OrderDetailPage />} />
+        <Route path="invoices/:id" element={<InvoiceDetailPage />} />
         <Route path="payments" element={<BuyerPaymentsPage />} />
         <Route path="fabrication" element={<FabricationBuyerPage />} />
+        <Route path="addresses" element={<AddressBookPage />} />
         <Route path="wishlist" element={<WishlistPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
@@ -147,24 +163,40 @@ export default function App() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="orders" element={<AdminOrdersPage />} />
+        <Route path="orders/:id" element={<AdminOrderDetailPage />} />
         <Route path="quotations" element={<AdminQuotationsPage />} />
         <Route path="products" element={<AdminProductsPage />} />
+        <Route path="catalog-meta" element={<AdminCatalogMetaPage />} />
         <Route path="pricing" element={<AdminPricingPage />} />
+        <Route path="special-pricing" element={<SpecialPricingPage />} />
         <Route path="inventory" element={<AdminInventoryPage />} />
         <Route path="purchase" element={<AdminPurchasePage />} />
         <Route path="vendors" element={<AdminVendorsPage />} />
         <Route path="transport" element={<AdminTransportPage />} />
         <Route path="finance" element={<AdminFinancePage />} />
         <Route path="crm" element={<AdminCrmPage />} />
+        <Route path="crm/:id" element={<Crm360Page />} />
         <Route path="reports" element={<AdminReportsPage />} />
+        <Route path="reports/:type" element={<ReportDetailPage />} />
         <Route path="analytics" element={<AdminAnalyticsPage />} />
         <Route path="ai" element={<AdminAiPage />} />
         <Route path="estimator" element={<AdminEstimatorPage />} />
         <Route path="hr" element={<AdminHrPage />} />
         <Route path="users" element={<AdminUsersPage />} />
+        <Route path="audit" element={<AuditLogPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
       </Route>
 
+      <Route
+        path="/manufacturer"
+        element={
+          <Guard allow={['manufacturer', 'admin']}>
+            <ManufacturerLayout />
+          </Guard>
+        }
+      >
+        <Route index element={<ManufacturerPortalPage />} />
+      </Route>
       <Route
         path="/warehouse"
         element={
@@ -211,38 +243,11 @@ export default function App() {
         <Route path="history" element={<DriverHistoryPage />} />
       </Route>
 
-      <Route
-        path="/notifications"
-        element={
-          <Authed>
-            <div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)]">
-              <NotificationsPage />
-            </div>
-          </Authed>
-        }
-      />
-      <Route
-        path="/support"
-        element={
-          <Authed>
-            <div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)]">
-              <SupportPage />
-            </div>
-          </Authed>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <Authed>
-            <div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)] p-4">
-              <div className="mx-auto max-w-5xl">
-                <ProfilePage />
-              </div>
-            </div>
-          </Authed>
-        }
-      />
+      <Route path="/notifications" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)]"><NotificationsPage /></div></Authed>} />
+      <Route path="/support" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)]"><SupportPage /></div></Authed>} />
+      <Route path="/profile" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)] p-4"><div className="mx-auto max-w-5xl"><ProfilePage /></div></div></Authed>} />
+      <Route path="/settings" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)] p-4"><div className="mx-auto max-w-5xl"><UserSettingsPage /></div></div></Authed>} />
+      <Route path="/search" element={<Authed><div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)] p-4"><div className="mx-auto max-w-5xl"><GlobalSearchPage /></div></div></Authed>} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

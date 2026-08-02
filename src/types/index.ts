@@ -428,3 +428,89 @@ export interface BomSuggestion {
   qty: number
   reason: string
 }
+
+export interface SpecialCustomerPrice {
+  id: string
+  customerId: string
+  productId: string
+  price: number
+  note?: string
+}
+
+export interface NotificationPrefs {
+  userId: string
+  in_app: boolean
+  push: boolean
+  sms: boolean
+  whatsapp: boolean
+  email: boolean
+}
+
+export interface AuditLog {
+  id: string
+  at: string
+  actorId: string
+  action: string
+  entity: string
+  ref: string
+  detail: string
+}
+
+export interface FuelLog {
+  id: string
+  vehicleId: string
+  liters: number
+  amount: number
+  at: string
+  note?: string
+}
+
+export interface TripExpense {
+  id: string
+  tripId?: string
+  vehicleId: string
+  category: 'toll' | 'loading' | 'parking' | 'other'
+  amount: number
+  at: string
+  note?: string
+}
+
+export interface LeaveRequest {
+  id: string
+  employeeId: string
+  from: string
+  to: string
+  reason: string
+  status: 'pending' | 'approved' | 'rejected'
+}
+
+export interface SalaryPayment {
+  id: string
+  employeeId: string
+  month: string
+  amount: number
+  status: 'draft' | 'paid'
+  at: string
+}
+
+export interface Supplier {
+  id: string
+  name: string
+  type: 'manufacturer' | 'local_supplier'
+  phone: string
+  city: string
+  outstanding: number
+}
+
+export interface EstimatorDraft {
+  id: string
+  city: string
+  floors: number
+  customerId: string
+  bom: BomSuggestion[]
+  quotationId?: string
+  reserved: boolean
+  deliveryDate?: string
+  fabricationAttached?: boolean
+  fabricationRequestId?: string
+}

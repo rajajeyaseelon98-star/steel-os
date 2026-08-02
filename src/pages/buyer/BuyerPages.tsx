@@ -76,7 +76,10 @@ function ProductPrice({ productId }: { productId: string }) {
   return (
     <div>
       <div className="text-lg font-semibold text-steel-900">{inr(price)}</div>
-      <div className="text-xs uppercase text-steel-400">{priceType} · excl. GST {product.gstPercent}%</div>
+      <div className="text-xs uppercase text-steel-400">
+        {priceType} · excl. GST {product.gstPercent}%
+        {priceType === 'special' ? ' · special customer' : ''}
+      </div>
     </div>
   )
 }
@@ -299,10 +302,15 @@ export function QuotationDetailPage() {
   const sendQuotation = useAppStore((s) => s.sendQuotation)
   const acceptQuotation = useAppStore((s) => s.acceptQuotation)
   const rejectQuotation = useAppStore((s) => s.rejectQuotation)
+  const reviseQuotation = useAppStore((s) => s.reviseQuotation)
+  const expireQuotation = useAppStore((s) => s.expireQuotation)
+  const updateQuotationItems = useAppStore((s) => s.updateQuotationItems)
   const user = useAppStore((s) => s.currentUser())!
   const navigate = useNavigate()
   if (!q) return <Empty title="Quotation not found" />
   const totals = orderTotals(q.items)
+  const canSend = ['draft', 'revised'].includes(q.status) && ['master_trader', 'super_admin', 'dealer'].includes(user.role)
+  const canAccept = ['sent', 'revised', 'draft'].includes(q.status) && q.customerId === user.id
 
   return (
     <div>
@@ -310,27 +318,48 @@ export function QuotationDetailPage() {
         title={q.number}
         subtitle={q.projectName ?? 'Standard quotation'}
         actions={
-          <div className="flex gap-2">
-            {q.status === 'draft' && ['master_trader', 'super_admin', 'dealer'].includes(user.role) ? (
-              <Button onClick={() => sendQuotation(q.id)}>Send to customer</Button>
-            ) : null}
-            {q.status === 'sent' && q.customerId === user.id ? (
+          <div className="flex flex-wrap gap-2">
+            {canSend ? <Button onClick={() => sendQuotation(q.id)}>Send to customer</Button> : null}
+            {canAccept ? (
               <>
                 <Button onClick={() => { const o = acceptQuotation(q.id); if (o) navigate(`/buyer/orders/${o.id}`) }}>Accept & convert</Button>
                 <Button variant="danger" onClick={() => rejectQuotation(q.id)}>Reject</Button>
               </>
             ) : null}
+            {['sent', 'rejected', 'draft'].includes(q.status) && ['master_trader', 'super_admin', 'dealer'].includes(user.role) ? (
+              <Button variant="secondary" onClick={() => reviseQuotation(q.id, q.items, `${q.notes ?? ''} · revised`)}>Revise</Button>
+            ) : null}
+            {q.status === 'sent' ? <Button variant="ghost" onClick={() => expireQuotation(q.id)}>Expire</Button> : null}
           </div>
         }
       />
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <Table
-            headers={['Product', 'Qty', 'Price type', 'Rate', 'GST', 'Line']}
-            rows={q.items.map((item) => {
+            headers={['Product', 'Qty', 'Price type', 'Rate', 'GST', 'Line', 'Edit qty']}
+            rows={q.items.map((item, idx) => {
               const p = products.find((x) => x.id === item.productId)!
               const t = lineTotals(item.unitPrice, item.qty, item.gstPercent)
-              return [p.name, item.qty, item.priceType, inr(item.unitPrice), `${item.gstPercent}%`, inr(t.total)]
+              return [
+                p.name,
+                item.qty,
+                item.priceType,
+                inr(item.unitPrice),
+                `${item.gstPercent}%`,
+                inr(t.total),
+                ['draft', 'revised', 'sent'].includes(q.status) ? (
+                  <Input
+                    type="number"
+                    className="w-20"
+                    defaultValue={item.qty}
+                    onBlur={(e) => {
+                      const qtyVal = Number(e.target.value)
+                      const next = q.items.map((it, i) => (i === idx ? { ...it, qty: qtyVal } : it))
+                      updateQuotationItems(q.id, next)
+                    }}
+                  />
+                ) : '—',
+              ]
             })}
           />
           {q.notes ? <p className="mt-4 text-sm text-steel-600">{q.notes}</p> : null}
@@ -374,7 +403,7 @@ export function OrdersPage() {
   )
 }
 
-const orderSteps = ['pending_approval', 'approved', 'dispatched', 'delivered', 'completed']
+const orderSteps = ['pending_approval', 'approved', 'partially_dispatched', 'dispatched', 'delivered', 'completed']
 
 export function OrderDetailPage() {
   const { id } = useParams()
@@ -383,9 +412,12 @@ export function OrderDetailPage() {
   const invoices = useAppStore((s) => s.invoices.filter((i) => i.orderId === id))
   const cancelOrder = useAppStore((s) => s.cancelOrder)
   const updateOrderStatus = useAppStore((s) => s.updateOrderStatus)
+  const requestReturn = useAppStore((s) => s.requestReturn)
+  const refundOrder = useAppStore((s) => s.refundOrder)
+  const user = useAppStore((s) => s.currentUser())!
   if (!order) return <Empty title="Order not found" />
   const totals = orderTotals(order.items)
-  const timelineStatus = orderSteps.includes(order.status) ? order.status : order.status === 'partially_dispatched' ? 'dispatched' : 'pending_approval'
+  const timelineStatus = orderSteps.includes(order.status) ? order.status : order.status === 'partially_dispatched' ? 'partially_dispatched' : 'pending_approval'
 
   return (
     <div>
@@ -393,9 +425,17 @@ export function OrderDetailPage() {
         title={order.number}
         subtitle={order.notes ?? 'Order detail'}
         actions={
-          !['cancelled', 'completed', 'refunded'].includes(order.status) ? (
-            <Button variant="danger" onClick={() => cancelOrder(order.id)}>Cancel</Button>
-          ) : null
+          <div className="flex flex-wrap gap-2">
+            {!['cancelled', 'completed', 'refunded'].includes(order.status) ? (
+              <Button variant="danger" onClick={() => cancelOrder(order.id)}>Cancel</Button>
+            ) : null}
+            {['delivered', 'completed'].includes(order.status) && order.customerId === user.id ? (
+              <Button variant="ghost" onClick={() => requestReturn(order.id)}>Request return</Button>
+            ) : null}
+            {order.status === 'return_requested' && ['master_trader', 'super_admin'].includes(user.role) ? (
+              <Button variant="danger" onClick={() => refundOrder(order.id)}>Refund</Button>
+            ) : null}
+          </div>
         }
       />
       <div className="grid gap-4 lg:grid-cols-3">
@@ -411,7 +451,8 @@ export function OrderDetailPage() {
           />
           {invoices.map((inv) => (
             <div key={inv.id} className="mt-4 rounded-lg bg-steel-50 p-3 text-sm">
-              Invoice {inv.number} · {StatusBadge({ status: inv.status })} · Due {inv.dueDate} · Paid {inr(inv.paidAmount)} / {inr(inv.amount + inv.gstAmount)}
+              <Link className="font-medium text-brand" to={`/buyer/invoices/${inv.id}`}>Invoice {inv.number}</Link>
+              {' · '}<StatusBadge status={inv.status} /> · Due {inv.dueDate} · Paid {inr(inv.paidAmount)} / {inr(inv.amount + inv.gstAmount)}
             </div>
           ))}
           {order.status === 'delivered' ? (
@@ -470,10 +511,13 @@ export function BuyerPaymentsPage() {
         </Card>
         <Card className="lg:col-span-2">
           <h3 className="mb-3 font-semibold">Invoices</h3>
-          <Table
-            headers={['Invoice', 'Due', 'Total', 'Paid', 'Status']}
-            rows={invoices.map((i) => [i.number, i.dueDate, inr(i.amount + i.gstAmount), inr(i.paidAmount), <StatusBadge status={i.status} />])}
-          />
+          <Table headers={['Invoice', 'Due', 'Total', 'Paid', 'Status']} rows={invoices.map((i) => [
+            <Link className="text-brand" to={`/buyer/invoices/${i.id}`}>{i.number}</Link>,
+            i.dueDate,
+            inr(i.amount + i.gstAmount),
+            inr(i.paidAmount),
+            <StatusBadge status={i.status} />,
+          ])} />
         </Card>
       </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -492,7 +536,11 @@ export function BuyerPaymentsPage() {
 
 export function FabricationBuyerPage() {
   const user = useAppStore((s) => s.currentUser())!
-  const requests = useAppStore((s) => s.fabricationRequests.filter((r) => r.customerId === user.id || true))
+  const requests = useAppStore((s) =>
+    ['master_trader', 'super_admin'].includes(user.role)
+      ? s.fabricationRequests
+      : s.fabricationRequests.filter((r) => r.customerId === user.id),
+  )
   const quotes = useAppStore((s) => s.fabricationQuotes)
   const createFabRequest = useAppStore((s) => s.createFabRequest)
   const selectFabQuote = useAppStore((s) => s.selectFabQuote)
@@ -532,7 +580,7 @@ export function FabricationBuyerPage() {
         <Card className="lg:col-span-2">
           <h3 className="mb-3 font-semibold">My requests & quotes</h3>
           <div className="space-y-4">
-            {requests.filter((r) => r.customerId === user.id).map((r) => {
+            {requests.map((r) => {
               const qs = quotes.filter((q) => q.requestId === r.id)
               return (
                 <div key={r.id} className="rounded-xl border border-steel-100 p-3">
@@ -589,9 +637,11 @@ export function WishlistPage() {
 
 export function ProfilePage() {
   const user = useAppStore((s) => s.currentUser())!
+  const hold = user.creditLimit > 0 && user.creditUsed >= user.creditLimit
   return (
     <div>
       <PageHeader title="Profile" subtitle="Business details, GST, credit" />
+      {hold ? <Card className="mb-4 border-danger bg-red-50 text-sm text-danger">Credit hold active — collections required before new credit orders.</Card> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <div className="text-3xl font-semibold">{user.avatarInitials}</div>
@@ -603,6 +653,10 @@ export function ProfilePage() {
             <div>City: {user.city}</div>
             <div>GSTIN: {user.gstin ?? '—'}</div>
             <div>Verification: <StatusBadge status={user.verificationStatus} /></div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link to="/buyer/addresses"><Button variant="ghost">Address book</Button></Link>
+            <Link to="/settings"><Button variant="ghost">User settings</Button></Link>
           </div>
         </Card>
         <Card>

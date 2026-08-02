@@ -30,9 +30,10 @@ function Shell({
   const user = useAppStore((s) => s.currentUser())
   const loginAs = useAppStore((s) => s.loginAs)
   const logout = useAppStore((s) => s.logout)
-  const notifications = useAppStore((s) => s.notifications)
+  const unread = useAppStore((s) =>
+    s.notifications.reduce((n, item) => (item.userId === s.currentUserId && !item.read ? n + 1 : n), 0),
+  )
   const navigate = useNavigate()
-  const unread = notifications.filter((n) => n.userId === user?.id && !n.read).length
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#eef2f6_0%,#f7f8fa_45%,#e8ecf0_100%)]">
@@ -153,12 +154,15 @@ export function BuyerLayout() {
       nav={[
         { to: '/buyer', label: 'Home' },
         { to: '/buyer/catalog', label: 'Catalog' },
+        { to: '/search', label: 'Search' },
         { to: '/buyer/quotations', label: 'Quotations' },
         { to: '/buyer/orders', label: 'Orders' },
         { to: '/buyer/payments', label: 'Payments' },
         { to: '/buyer/fabrication', label: 'Fabrication' },
+        { to: '/buyer/addresses', label: 'Addresses' },
         { to: '/buyer/wishlist', label: 'Wishlist' },
         { to: '/profile', label: 'Profile' },
+        { to: '/settings', label: 'Settings' },
         { to: '/support', label: 'Support' },
       ]}
     />
@@ -171,10 +175,13 @@ export function AdminLayout() {
       title="Operations Console"
       nav={[
         { to: '/admin', label: 'Dashboard' },
+        { to: '/search', label: 'Search' },
         { to: '/admin/orders', label: 'Orders' },
         { to: '/admin/quotations', label: 'Quotations' },
         { to: '/admin/products', label: 'Products' },
+        { to: '/admin/catalog-meta', label: 'Categories' },
         { to: '/admin/pricing', label: 'Pricing' },
+        { to: '/admin/special-pricing', label: 'Special $' },
         { to: '/admin/inventory', label: 'Inventory' },
         { to: '/admin/purchase', label: 'Purchase' },
         { to: '/admin/vendors', label: 'Vendors' },
@@ -187,6 +194,7 @@ export function AdminLayout() {
         { to: '/admin/estimator', label: 'Estimator' },
         { to: '/admin/hr', label: 'HR' },
         { to: '/admin/users', label: 'Users' },
+        { to: '/admin/audit', label: 'Audit' },
         { to: '/admin/settings', label: 'Settings' },
       ]}
     />
@@ -237,6 +245,20 @@ export function DriverLayout() {
         { to: '/driver', label: 'Today' },
         { to: '/driver/history', label: 'History' },
         { to: '/profile', label: 'Profile' },
+      ]}
+    />
+  )
+}
+
+export function ManufacturerLayout() {
+  return (
+    <Shell
+      title="Manufacturer Portal"
+      nav={[
+        { to: '/manufacturer', label: 'Home' },
+        { to: '/profile', label: 'Profile' },
+        { to: '/settings', label: 'Settings' },
+        { to: '/support', label: 'Support' },
       ]}
     />
   )

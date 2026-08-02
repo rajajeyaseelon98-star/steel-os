@@ -16,12 +16,32 @@ export function defaultPriceTypeForRole(role: Role): PriceType {
   return roleDefaultPrice[role] ?? 'retail'
 }
 
+/**
+ * Part N precedence:
+ * 1. Special Customer Price (if exists)
+ * 2. Project Price (when override/project context)
+ * 3. Role default
+ * 4. Fallback list (retail)
+ */
 export function resolveUnitPrice(
   product: Product,
   role: Role,
-  override?: PriceType,
+  options?: {
+    override?: PriceType
+    specialPrice?: number | null
+    projectMode?: boolean
+  },
 ): { price: number; priceType: PriceType } {
-  const priceType = override ?? defaultPriceTypeForRole(role)
+  if (options?.specialPrice != null && options.specialPrice > 0) {
+    return { price: options.specialPrice, priceType: 'special' }
+  }
+  if (options?.override) {
+    return { price: product.prices[options.override], priceType: options.override }
+  }
+  if (options?.projectMode) {
+    return { price: product.prices.project, priceType: 'project' }
+  }
+  const priceType = defaultPriceTypeForRole(role)
   return { price: product.prices[priceType], priceType }
 }
 
@@ -48,4 +68,8 @@ export function orderTotals(
 
 export function availableCredit(user: User) {
   return Math.max(0, user.creditLimit - user.creditUsed)
+}
+
+export function isCreditHold(user: User) {
+  return user.creditLimit > 0 && user.creditUsed >= user.creditLimit
 }

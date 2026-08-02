@@ -13,8 +13,11 @@ export type Capability =
   | 'finance'
   | 'reports'
   | 'settings'
+  | 'manage_vendors'
+  | 'view_audit'
+  | 'manufacturer_portal'
 
-const matrix: Record<Capability, Role[]> = {
+export const permissionMatrix: Record<Capability, Role[]> = {
   manage_users: ['super_admin', 'master_trader'],
   manage_products: ['super_admin', 'master_trader', 'manufacturer'],
   manage_pricing: ['super_admin', 'master_trader'],
@@ -27,18 +30,24 @@ const matrix: Record<Capability, Role[]> = {
   finance: ['super_admin', 'master_trader', 'dealer', 'contractor', 'retail', 'fabricator', 'manufacturer', 'driver'],
   reports: ['super_admin', 'master_trader', 'warehouse_manager', 'dealer', 'contractor', 'fabricator', 'driver', 'manufacturer'],
   settings: ['super_admin', 'master_trader'],
+  manage_vendors: ['super_admin', 'master_trader'],
+  view_audit: ['super_admin', 'master_trader'],
+  manufacturer_portal: ['manufacturer', 'super_admin', 'master_trader'],
 }
 
 export function can(role: Role, capability: Capability) {
-  return matrix[capability].includes(role)
+  return permissionMatrix[capability].includes(role)
 }
 
-export function workspaceForRole(role: Role): 'admin' | 'buyer' | 'warehouse' | 'fabricator' | 'driver' {
+export type Workspace = 'admin' | 'buyer' | 'warehouse' | 'fabricator' | 'driver' | 'manufacturer'
+
+export function workspaceForRole(role: Role): Workspace {
   switch (role) {
     case 'super_admin':
     case 'master_trader':
-    case 'manufacturer':
       return 'admin'
+    case 'manufacturer':
+      return 'manufacturer'
     case 'warehouse_manager':
       return 'warehouse'
     case 'fabricator':
@@ -52,6 +61,7 @@ export function workspaceForRole(role: Role): 'admin' | 'buyer' | 'warehouse' | 
 
 export function homePathForRole(role: Role) {
   const ws = workspaceForRole(role)
+  if (ws === 'manufacturer') return '/manufacturer'
   return `/${ws}`
 }
 
@@ -65,4 +75,22 @@ export const roleLabels: Record<Role, string> = {
   contractor: 'Contractor',
   driver: 'Transport / Driver',
   retail: 'Retail Customer',
+}
+
+export const capabilityLabels: Record<Capability, string> = {
+  manage_users: 'Manage users',
+  manage_products: 'Manage products',
+  manage_pricing: 'Manage pricing',
+  create_quotation: 'Create quotation',
+  place_order: 'Place order',
+  manage_inventory: 'Manage inventory',
+  dispatch: 'Dispatch / GRN',
+  delivery_pod: 'Delivery POD',
+  fabrication_leads: 'Fabrication leads',
+  finance: 'Finance / ledger',
+  reports: 'Reports / analytics',
+  settings: 'Settings',
+  manage_vendors: 'Vendor management',
+  view_audit: 'Audit logs',
+  manufacturer_portal: 'Manufacturer portal',
 }

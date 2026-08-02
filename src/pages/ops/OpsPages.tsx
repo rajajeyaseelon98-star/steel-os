@@ -299,19 +299,34 @@ export function FabricatorQuotesPage() {
 
 export function FabricatorJobsPage() {
   const user = useAppStore((s) => s.currentUser())!
-  const jobs = useAppStore((s) => s.fabricationJobs.filter((j) => j.fabricatorId === user.id))
+  const jobs = useAppStore((s) =>
+    ['master_trader', 'super_admin'].includes(user.role)
+      ? s.fabricationJobs
+      : s.fabricationJobs.filter((j) => j.fabricatorId === user.id),
+  )
   const quotes = useAppStore((s) => s.fabricationQuotes)
   const products = useAppStore((s) => s.products)
+  const advanceFabJob = useAppStore((s) => s.advanceFabJob)
+  const payFabJob = useAppStore((s) => s.payFabJob)
   return (
     <div>
-      <PageHeader title="Accepted jobs" />
+      <PageHeader title="Accepted jobs" subtitle="accepted → in progress → completed → paid" />
       {jobs.map((j) => {
         const q = quotes.find((x) => x.id === j.quoteId)
         return (
           <Card key={j.id} className="mb-3">
             <div className="flex justify-between"><strong>{j.id}</strong><StatusBadge status={j.status} /></div>
-            <div className="mt-2 text-sm">Payment: {j.paymentStatus}</div>
+            <div className="mt-2 text-sm">Payment: <StatusBadge status={j.paymentStatus} /></div>
             <div className="mt-2 text-sm">Materials required: {q?.materials.map((m) => `${products.find((p) => p.id === m.productId)?.name} × ${m.qty}`).join(', ')}</div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {j.status !== 'completed' ? <Button onClick={() => advanceFabJob(j.id)}>Advance status</Button> : null}
+              {j.status === 'completed' && j.paymentStatus !== 'paid' ? (
+                <>
+                  <Button variant="secondary" onClick={() => payFabJob(j.id, 'partial')}>Part payment</Button>
+                  <Button onClick={() => payFabJob(j.id, 'paid')}>Mark paid</Button>
+                </>
+              ) : null}
+            </div>
           </Card>
         )
       })}
@@ -326,20 +341,36 @@ export function FabricatorPaymentsPage() {
     <div>
       <PageHeader title="Payments" />
       <Table
-        headers={['Job', 'Payment status']}
-        rows={jobs.map((j) => [j.id, <StatusBadge status={j.paymentStatus} />])}
+        headers={['Job', 'Job status', 'Payment status']}
+        rows={jobs.map((j) => [j.id, <StatusBadge status={j.status} />, <StatusBadge status={j.paymentStatus} />])}
       />
     </div>
   )
 }
 
 export function FabricatorReviewsPage() {
+  const jobs = useAppStore((s) => s.fabricationJobs.filter((j) => j.status === 'completed'))
+  const reviewFabJob = useAppStore((s) => s.reviewFabJob)
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('Good work')
   return (
     <div>
       <PageHeader title="Reviews" />
-      <Card>
-        <div className="text-sm text-steel-600">No reviews yet. Completed jobs will collect ratings here.</div>
-      </Card>
+      {jobs.map((j) => (
+        <Card key={j.id} className="mb-3">
+          <div className="font-semibold">{j.id}</div>
+          {j.review ? (
+            <div className="mt-2 text-sm">★ {j.review.rating} — {j.review.comment}</div>
+          ) : (
+            <div className="mt-3 space-y-2">
+              <Input type="number" min={1} max={5} value={rating} onChange={(e) => setRating(Number(e.target.value))} />
+              <Input value={comment} onChange={(e) => setComment(e.target.value)} />
+              <Button onClick={() => reviewFabJob(j.id, rating, comment)}>Submit review</Button>
+            </div>
+          )}
+        </Card>
+      ))}
+      {!jobs.length ? <Card><div className="text-sm text-steel-600">Complete a job to collect reviews.</div></Card> : null}
     </div>
   )
 }
@@ -413,7 +444,11 @@ export function NotificationsPage() {
   const markNotificationRead = useAppStore((s) => s.markNotificationRead)
   return (
     <div className="mx-auto max-w-3xl p-4">
-      <PageHeader title="Notifications" subtitle="WhatsApp · SMS · Email · Push represented in-app" />
+      <PageHeader
+        title="Notifications"
+        subtitle="WhatsApp · SMS · Email · Push represented in-app"
+        actions={<Link to="/settings"><Button variant="ghost">Preferences</Button></Link>}
+      />
       <div className="space-y-3">
         {notifications.map((n) => (
           <Card key={n.id} className={n.read ? 'opacity-70' : ''}>
