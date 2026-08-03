@@ -1,21 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/store/appStore'
-import { roleLabels } from '@/lib/permissions'
+import { demoRoles, roleLabels } from '@/lib/permissions'
 import type { Role } from '@/types'
 import { Button } from '@/components/ui'
 import { users } from '@/mock/data'
-
-const roleOptions: Role[] = [
-  'super_admin',
-  'master_trader',
-  'manufacturer',
-  'dealer',
-  'contractor',
-  'warehouse_manager',
-  'fabricator',
-  'driver',
-  'retail',
-]
 
 export function TopBar({
   title,
@@ -55,7 +43,7 @@ export function TopBar({
 
         <select
           className="h-9 max-w-[160px] rounded-sm border border-border-chrome bg-surface-card px-2 text-xs text-text-primary outline-none focus:ring-2 focus:ring-focus/30"
-          value={user?.role}
+          value={user?.role === 'super_admin' || user?.role === 'retail' ? user.role : 'retail'}
           onChange={(e) => {
             const role = e.target.value as Role
             const u = users.find((x) => x.role === role)
@@ -63,7 +51,7 @@ export function TopBar({
           }}
           aria-label="Switch demo role"
         >
-          {roleOptions.map((r) => (
+          {demoRoles.map((r) => (
             <option key={r} value={r}>
               {roleLabels[r]}
             </option>

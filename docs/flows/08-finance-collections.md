@@ -1,8 +1,10 @@
 # 08 — Finance & Collections
 
-**Status:** Partial — payments/ledger **Implemented**; credit-hold **banner only**  
-**Actors:** Buyer, Admin  
-**Journey:** **F**
+> **OUT OF SCOPE (2-role trim).** Minimal invoice detail remains at `/buyer/invoices/:id` — see [04](./04-orders-fulfillment.md).
+
+**Status:** Removed from live UI (except buyer invoice detail)  
+**Actors:** ~~Buyer, Admin finance~~  
+**Journey:** **F** (archived)
 
 ## Entry routes
 

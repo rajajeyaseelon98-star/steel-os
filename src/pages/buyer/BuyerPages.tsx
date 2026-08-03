@@ -162,7 +162,8 @@ export function ProductDetailPage() {
   const createOrder = useAppStore((s) => s.createOrder)
   const createQuotation = useAppStore((s) => s.createQuotation)
   const toggleWishlist = useAppStore((s) => s.toggleWishlist)
-  const wishlist = useAppStore((s) => s.wishlist)
+  const userId = useAppStore((s) => s.currentUserId)
+  const wishlist = useAppStore((s) => (userId ? s.wishlists[userId] ?? [] : []))
   const navigate = useNavigate()
   const [warehouseId, setWarehouseId] = useState(inventory[0]?.warehouseId ?? 'wh-tnk')
   const [qtyVal, setQtyVal] = useState(10)
@@ -614,7 +615,8 @@ export function FabricationBuyerPage() {
 }
 
 export function WishlistPage() {
-  const wishlist = useAppStore((s) => s.wishlist)
+  const userId = useAppStore((s) => s.currentUserId)
+  const wishlist = useAppStore((s) => (userId ? s.wishlists[userId] ?? [] : []))
   const products = useAppStore((s) => s.products)
   const toggleWishlist = useAppStore((s) => s.toggleWishlist)
   const items = products.filter((p) => wishlist.includes(p.id))
@@ -656,8 +658,7 @@ export function ProfilePage() {
             <div>Verification: <StatusBadge status={user.verificationStatus} /></div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link to="/buyer/addresses"><Button variant="ghost">Address book</Button></Link>
-            <Link to="/settings"><Button variant="ghost">User settings</Button></Link>
+            <Link to="/support"><Button variant="ghost">Support</Button></Link>
           </div>
         </Card>
         <Card>

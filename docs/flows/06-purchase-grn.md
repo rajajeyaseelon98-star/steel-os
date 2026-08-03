@@ -1,8 +1,10 @@
 # 06 — Purchase → PO → GRN → Stock
 
-**Status:** Implemented  
-**Actors:** Admin (`super_admin`, `master_trader`); Warehouse posts GRN  
-**Journey:** **E**
+> **OUT OF SCOPE (2-role trim).** Historical only — see [00-INDEX](./00-INDEX.md) · [99](./99-gaps-and-stubs.md).
+
+**Status:** Removed from live UI  
+**Actors:** ~~Admin / Warehouse~~  
+**Journey:** **E** (archived)
 
 ## Entry routes
 

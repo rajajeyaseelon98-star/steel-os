@@ -1,7 +1,9 @@
 # 11 — CRM, HR & Admin Ops
 
-**Status:** Mixed — several screens **wired**; some **display-only** (see caveats)  
-**Actors:** Admin (`super_admin`, `master_trader`)
+> **OUT OF SCOPE (2-role trim).** CRM routes removed; customer search → `/admin/wishlists`.
+
+**Status:** Removed from live UI  
+**Actors:** ~~Admin~~
 
 ## Entry routes
 

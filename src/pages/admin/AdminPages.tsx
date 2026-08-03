@@ -26,14 +26,14 @@ import {
   Table,
   TextArea,
 } from '@/components/ui'
-import { brands, manufacturers, vehicles, warehouses, drivers } from '@/mock/data'
+import { brands, categories, manufacturers, vehicles, warehouses, drivers } from '@/mock/data'
 import { useAppStore } from '@/store/appStore'
 import { useExtrasStore } from '@/store/extrasStore'
 import { formatDate, inr, qty } from '@/lib/format'
 import { orderTotals } from '@/lib/pricing'
 import { can, capabilityLabels, permissionMatrix, roleLabels } from '@/lib/permissions'
 import type { Capability } from '@/lib/permissions'
-import type { PriceType, Role } from '@/types'
+import type { PriceType, Product, Role } from '@/types'
 
 export function AdminDashboard() {
   const orders = useAppStore((s) => s.orders)
@@ -105,41 +105,34 @@ export function AdminDashboard() {
 
 export function AdminOrdersPage() {
   const orders = useAppStore((s) => s.orders)
+  const users = useAppStore((s) => s.users)
   const approveOrder = useAppStore((s) => s.approveOrder)
+  const cancelOrder = useAppStore((s) => s.cancelOrder)
   const dispatchOrder = useAppStore((s) => s.dispatchOrder)
-  const partialDispatchOrder = useAppStore((s) => s.partialDispatchOrder)
-  const [vehicleId, setVehicleId] = useState('v-1')
-  const [driverId, setDriverId] = useState('drv-1')
+  const markOrderDelivered = useAppStore((s) => s.markOrderDelivered)
 
   return (
     <div>
-      <PageHeader title="Orders ops board" subtitle="Approve · reserve stock · dispatch / partial dispatch" />
-      <Card className="mb-4 grid gap-3 md:grid-cols-2">
-        <Field label="Dispatch vehicle">
-          <Select value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}>
-            {vehicles.map((v) => <option key={v.id} value={v.id}>{v.number} · {v.type}</option>)}
-          </Select>
-        </Field>
-        <Field label="Driver">
-          <Select value={driverId} onChange={(e) => setDriverId(e.target.value)}>
-            {drivers.map((d) => <option key={d.id} value={d.id}>{d.userId} · {d.licenseNo}</option>)}
-          </Select>
-        </Field>
-      </Card>
+      <PageHeader title="Orders" subtitle="Accept · reject · dispatch · mark delivered" />
       <Table
         headers={['Order', 'Customer', 'Status', 'Total', 'Actions']}
         rows={orders.map((o) => [
           <Link className="text-brand" to={`/admin/orders/${o.id}`}>{o.number}</Link>,
-          o.customerId,
+          users.find((u) => u.id === o.customerId)?.name ?? o.customerId,
           <StatusBadge status={o.status} />,
           inr(orderTotals(o.items).total),
           <div className="flex flex-wrap gap-2">
-            {o.status === 'pending_approval' ? <Button onClick={() => approveOrder(o.id)}>Approve</Button> : null}
-            {o.status === 'approved' ? (
+            {o.status === 'pending_approval' ? (
               <>
-                <Button variant="secondary" onClick={() => dispatchOrder(o.id, vehicleId, driverId)}>Dispatch</Button>
-                <Button variant="ghost" onClick={() => partialDispatchOrder(o.id, vehicleId, driverId)}>Partial</Button>
+                <Button onClick={() => approveOrder(o.id)}>Accept</Button>
+                <Button variant="danger" onClick={() => cancelOrder(o.id)}>Reject</Button>
               </>
+            ) : null}
+            {o.status === 'approved' || o.status === 'partially_dispatched' ? (
+              <Button variant="secondary" onClick={() => dispatchOrder(o.id, 'v-1', 'drv-1')}>Dispatch</Button>
+            ) : null}
+            {['dispatched', 'partially_dispatched'].includes(o.status) ? (
+              <Button onClick={() => markOrderDelivered(o.id)}>Mark delivered</Button>
             ) : null}
           </div>,
         ])}
@@ -154,11 +147,11 @@ export function AdminQuotationsPage() {
   const products = useAppStore((s) => s.products)
   const createQuotation = useAppStore((s) => s.createQuotation)
   const sendQuotation = useAppStore((s) => s.sendQuotation)
-  const [customerId, setCustomerId] = useState('u-contractor')
+  const [customerId, setCustomerId] = useState('u-retail')
   const [productId, setProductId] = useState('p-sq-1')
   const [qtyVal, setQtyVal] = useState(100)
-  const [priceType, setPriceType] = useState<PriceType>('project')
-  const [projectName, setProjectName] = useState('G+1 Sankarankovil')
+  const [priceType, setPriceType] = useState<PriceType>('retail')
+  const [projectName, setProjectName] = useState('Retail order')
 
   return (
     <div>
@@ -168,7 +161,7 @@ export function AdminQuotationsPage() {
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <Field label="Customer">
             <Select value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
-              {users.filter((u) => ['dealer', 'contractor', 'retail'].includes(u.role)).map((u) => (
+          {users.filter((u) => u.role === 'retail').map((u) => (
                 <option key={u.id} value={u.id}>{u.companyName}</option>
               ))}
             </Select>
@@ -228,18 +221,90 @@ export function AdminQuotationsPage() {
 
 export function AdminProductsPage() {
   const products = useAppStore((s) => s.products)
+  const upsertProduct = useAppStore((s) => s.upsertProduct)
+  const deleteProduct = useAppStore((s) => s.deleteProduct)
+  const [editing, setEditing] = useState<string | null>(null)
+  const makeBlank = (): Product => ({
+    id: `p-${Date.now().toString(36)}`,
+    sku: `SKU-${Date.now().toString(36).slice(-4).toUpperCase()}`,
+    name: '',
+    category: 'square-pipe',
+    brandId: brands[0]?.id ?? 'brand-jsw',
+    manufacturerId: manufacturers[0]?.id ?? 'mfr-jsw',
+    images: ['📦'],
+    weightKg: 1,
+    thicknessMm: 1,
+    lengthFt: 20,
+    description: '',
+    gstPercent: 18,
+    deliveryDays: 2,
+    prices: { retail: 100, dealer: 95, contractor: 97, wholesale: 90, project: 88, special: 85 },
+  })
+  const [form, setForm] = useState<Product>(makeBlank())
+
+  const startCreate = () => {
+    setEditing('new')
+    setForm(makeBlank())
+  }
+
+  const startEdit = (id: string) => {
+    const p = products.find((x) => x.id === id)
+    if (!p) return
+    setEditing(id)
+    setForm({ ...p })
+  }
+
   return (
-    <div>
-      <PageHeader title="Products" subtitle="Catalog admin" />
+    <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Catalog"
+        subtitle="Create · edit · delete products"
+        actions={<Button onClick={startCreate}>Add product</Button>}
+      />
+      {editing ? (
+        <Card>
+          <h3 className="font-semibold">{editing === 'new' ? 'New product' : 'Edit product'}</h3>
+          <div className="mt-3 grid gap-3 md:grid-cols-3">
+            <Field label="SKU"><Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></Field>
+            <Field label="Name"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+            <Field label="Category">
+              <Select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Product['category'] })}>
+                {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+              </Select>
+            </Field>
+            <Field label="Retail price">
+              <Input type="number" value={form.prices.retail} onChange={(e) => setForm({ ...form, prices: { ...form.prices, retail: Number(e.target.value) } })} />
+            </Field>
+            <Field label="GST %"><Input type="number" value={form.gstPercent} onChange={(e) => setForm({ ...form, gstPercent: Number(e.target.value) })} /></Field>
+            <Field label="Delivery days"><Input type="number" value={form.deliveryDays} onChange={(e) => setForm({ ...form, deliveryDays: Number(e.target.value) })} /></Field>
+          </div>
+          <Field label="Description"><TextArea className="mt-3" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
+          <div className="mt-4 flex gap-2">
+            <Button
+              onClick={() => {
+                if (!form.sku || !form.name) return
+                upsertProduct(form)
+                setEditing(null)
+              }}
+            >
+              Save
+            </Button>
+            <Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+          </div>
+        </Card>
+      ) : null}
       <Table
-        headers={['SKU', 'Name', 'Category', 'Brand', 'GST', 'Delivery']}
+        headers={['SKU', 'Name', 'Category', 'Retail', 'GST', '']}
         rows={products.map((p) => [
           p.sku,
           p.name,
           p.category,
-          brands.find((b) => b.id === p.brandId)?.name,
+          inr(p.prices.retail),
           `${p.gstPercent}%`,
-          `${p.deliveryDays}d`,
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => startEdit(p.id)}>Edit</Button>
+            <Button variant="danger" onClick={() => deleteProduct(p.id)}>Delete</Button>
+          </div>,
         ])}
       />
     </div>
@@ -598,7 +663,7 @@ export function AdminCrmPage() {
               roleLabels[u.role],
               u.city,
               inr(u.creditUsed),
-              <Link className="text-brand" to={`/admin/crm/${u.id}`}>360</Link>,
+              <Link className="text-brand" to="/admin/wishlists">Wishlists</Link>,
             ])}
           />
         </Card>

@@ -10,89 +10,29 @@ type ShellConfig = { title: string; nav: NavItem[]; mobile?: boolean }
 
 export const SHELL_BY_WORKSPACE: Record<Workspace, ShellConfig> = {
   buyer: {
-    title: 'Buyer Workspace',
+    title: 'Retail Customer',
     nav: [
       { to: '/buyer', label: 'Home' },
       { to: '/buyer/catalog', label: 'Catalog' },
       { to: '/search', label: 'Search' },
       { to: '/buyer/quotations', label: 'Quotations' },
       { to: '/buyer/orders', label: 'Orders' },
-      { to: '/buyer/payments', label: 'Payments' },
-      { to: '/buyer/fabrication', label: 'Fabrication' },
-      { to: '/buyer/addresses', label: 'Addresses' },
       { to: '/buyer/wishlist', label: 'Wishlist' },
       { to: '/profile', label: 'Profile' },
-      { to: '/settings', label: 'Settings' },
       { to: '/support', label: 'Support' },
     ],
   },
   admin: {
-    title: 'Operations Console',
+    title: 'Super Admin',
     nav: [
       { to: '/admin', label: 'Dashboard' },
-      { to: '/search', label: 'Search' },
-      { to: '/admin/orders', label: 'Orders' },
+      { to: '/admin/products', label: 'Catalog' },
+      { to: '/admin/quotation-templates', label: 'Quote templates' },
       { to: '/admin/quotations', label: 'Quotations' },
-      { to: '/admin/products', label: 'Products' },
-      { to: '/admin/catalog-meta', label: 'Categories' },
-      { to: '/admin/pricing', label: 'Pricing' },
-      { to: '/admin/special-pricing', label: 'Special $' },
-      { to: '/admin/inventory', label: 'Inventory' },
-      { to: '/admin/purchase', label: 'Purchase' },
-      { to: '/admin/vendors', label: 'Vendors' },
-      { to: '/admin/transport', label: 'Transport' },
-      { to: '/admin/finance', label: 'Finance' },
-      { to: '/admin/crm', label: 'CRM' },
-      { to: '/admin/reports', label: 'Reports' },
-      { to: '/admin/analytics', label: 'Analytics' },
-      { to: '/admin/ai', label: 'AI Insights' },
-      { to: '/admin/estimator', label: 'Estimator' },
-      { to: '/admin/hr', label: 'HR' },
-      { to: '/admin/users', label: 'Users' },
-      { to: '/admin/audit', label: 'Audit' },
-      { to: '/admin/settings', label: 'Settings' },
-    ],
-  },
-  warehouse: {
-    title: 'Warehouse App',
-    mobile: true,
-    nav: [
-      { to: '/warehouse', label: 'Home' },
-      { to: '/warehouse/receiving', label: 'Receiving' },
-      { to: '/warehouse/stock', label: 'Stock' },
-      { to: '/warehouse/dispatch', label: 'Dispatch' },
-      { to: '/warehouse/transfers', label: 'Transfer' },
-      { to: '/warehouse/scan', label: 'Barcode' },
-      { to: '/warehouse/reports', label: 'Reports' },
-    ],
-  },
-  fabricator: {
-    title: 'Fabricator App',
-    mobile: true,
-    nav: [
-      { to: '/fabricator', label: 'Leads' },
-      { to: '/fabricator/quotes', label: 'Quotes' },
-      { to: '/fabricator/jobs', label: 'Jobs' },
-      { to: '/fabricator/payments', label: 'Payments' },
-      { to: '/fabricator/reviews', label: 'Reviews' },
+      { to: '/admin/orders', label: 'Orders' },
+      { to: '/admin/wishlists', label: 'Wishlists' },
+      { to: '/search', label: 'Search' },
       { to: '/profile', label: 'Profile' },
-    ],
-  },
-  driver: {
-    title: 'Driver App',
-    mobile: true,
-    nav: [
-      { to: '/driver', label: 'Today' },
-      { to: '/driver/history', label: 'History' },
-      { to: '/profile', label: 'Profile' },
-    ],
-  },
-  manufacturer: {
-    title: 'Manufacturer Portal',
-    nav: [
-      { to: '/manufacturer', label: 'Home' },
-      { to: '/profile', label: 'Profile' },
-      { to: '/settings', label: 'Settings' },
       { to: '/support', label: 'Support' },
     ],
   },
@@ -163,7 +103,6 @@ function Shell({
         </main>
       </div>
 
-      {/* Mobile bottom nav for desktop workspaces */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface-card/95 backdrop-blur-md lg:hidden">
         <div className="flex gap-1 overflow-x-auto px-2 py-2">
           {nav.map((item) => (
@@ -194,23 +133,6 @@ export function AdminLayout() {
   return <Shell {...SHELL_BY_WORKSPACE.admin} />
 }
 
-export function WarehouseLayout() {
-  return <Shell {...SHELL_BY_WORKSPACE.warehouse} />
-}
-
-export function FabricatorLayout() {
-  return <Shell {...SHELL_BY_WORKSPACE.fabricator} />
-}
-
-export function DriverLayout() {
-  return <Shell {...SHELL_BY_WORKSPACE.driver} />
-}
-
-export function ManufacturerLayout() {
-  return <Shell {...SHELL_BY_WORKSPACE.manufacturer} />
-}
-
-/** Shared routes (/search, /profile, …) keep sticky Shell chrome for the current role. */
 export function RoleWorkspaceShell() {
   const user = useAppStore((s) => s.currentUser())
   if (!user) return <Navigate to="/login" replace />
@@ -225,10 +147,10 @@ export function AuthLayout() {
         <div>
           <div className="text-sm font-semibold uppercase tracking-[0.35em] text-brand-light">Steel Cart</div>
           <h1 className="mt-3 max-w-xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-            South Tamil Nadu steel distribution operating system
+            Steel distribution for retail customers
           </h1>
           <p className="mt-3 max-w-md text-steel-300">
-            Prototype for dealers, contractors, warehouses, fabricators, and transport — not a shop app.
+            Prototype — Retail Customer and Super Admin only.
           </p>
         </div>
         <div className="w-full md:justify-self-end md:max-w-md">

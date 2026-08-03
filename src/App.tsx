@@ -3,12 +3,8 @@ import {
   AdminLayout,
   AuthLayout,
   BuyerLayout,
-  DriverLayout,
-  FabricatorLayout,
-  ManufacturerLayout,
   RoleHomeRedirect,
   RoleWorkspaceShell,
-  WarehouseLayout,
 } from '@/layouts/Shell'
 import { useAppStore } from '@/store/appStore'
 import {
@@ -26,9 +22,7 @@ import {
 } from '@/pages/auth/AuthPages'
 import {
   BuyerHome,
-  BuyerPaymentsPage,
   CatalogPage,
-  FabricationBuyerPage,
   OrderDetailPage,
   OrdersPage,
   ProductDetailPage,
@@ -38,57 +32,18 @@ import {
   WishlistPage,
 } from '@/pages/buyer/BuyerPages'
 import {
-  AdminAiPage,
-  AdminAnalyticsPage,
-  AdminCrmPage,
   AdminDashboard,
-  AdminEstimatorPage,
-  AdminFinancePage,
-  AdminHrPage,
-  AdminInventoryPage,
   AdminOrdersPage,
-  AdminPricingPage,
   AdminProductsPage,
-  AdminPurchasePage,
   AdminQuotationsPage,
-  AdminReportsPage,
-  AdminSettingsPage,
-  AdminTransportPage,
-  AdminUsersPage,
-  AdminVendorsPage,
 } from '@/pages/admin/AdminPages'
+import { NotificationsPage, SupportPage } from '@/pages/ops/OpsPages'
 import {
-  DriverHistoryPage,
-  DriverHome,
-  DriverTripDetail,
-  FabricatorHome,
-  FabricatorJobsPage,
-  FabricatorLeadDetail,
-  FabricatorPaymentsPage,
-  FabricatorQuotesPage,
-  FabricatorReviewsPage,
-  NotificationsPage,
-  SupportPage,
-  WarehouseDispatchPage,
-  WarehouseHome,
-  WarehouseReceivingPage,
-  WarehouseReportsPage,
-  WarehouseScanPage,
-  WarehouseStockPage,
-  WarehouseTransfersPage,
-} from '@/pages/ops/OpsPages'
-import {
-  AddressBookPage,
-  AdminCatalogMetaPage,
   AdminOrderDetailPage,
-  AuditLogPage,
-  Crm360Page,
+  AdminWishlistsPage,
   GlobalSearchPage,
   InvoiceDetailPage,
-  ManufacturerPortalPage,
-  ReportDetailPage,
-  SpecialPricingPage,
-  UserSettingsPage,
+  QuotationTemplatesPage,
 } from '@/pages/gaps/GapPages'
 import { workspaceForRole } from '@/lib/permissions'
 
@@ -102,7 +57,7 @@ function Guard({
   const user = useAppStore((s) => s.currentUser())
   if (!user) return <Navigate to="/login" replace />
   const ws = workspaceForRole(user.role)
-  if (!allow.includes(ws)) return <Navigate to={ws === 'manufacturer' ? '/manufacturer' : `/${ws}`} replace />
+  if (!allow.includes(ws)) return <Navigate to={`/${ws}`} replace />
   return children
 }
 
@@ -141,9 +96,6 @@ export default function App() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="orders/:id" element={<OrderDetailPage />} />
         <Route path="invoices/:id" element={<InvoiceDetailPage />} />
-        <Route path="payments" element={<BuyerPaymentsPage />} />
-        <Route path="fabrication" element={<FabricationBuyerPage />} />
-        <Route path="addresses" element={<AddressBookPage />} />
         <Route path="wishlist" element={<WishlistPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
@@ -160,89 +112,15 @@ export default function App() {
         <Route path="orders" element={<AdminOrdersPage />} />
         <Route path="orders/:id" element={<AdminOrderDetailPage />} />
         <Route path="quotations" element={<AdminQuotationsPage />} />
+        <Route path="quotation-templates" element={<QuotationTemplatesPage />} />
         <Route path="products" element={<AdminProductsPage />} />
-        <Route path="catalog-meta" element={<AdminCatalogMetaPage />} />
-        <Route path="pricing" element={<AdminPricingPage />} />
-        <Route path="special-pricing" element={<SpecialPricingPage />} />
-        <Route path="inventory" element={<AdminInventoryPage />} />
-        <Route path="purchase" element={<AdminPurchasePage />} />
-        <Route path="vendors" element={<AdminVendorsPage />} />
-        <Route path="transport" element={<AdminTransportPage />} />
-        <Route path="finance" element={<AdminFinancePage />} />
-        <Route path="crm" element={<AdminCrmPage />} />
-        <Route path="crm/:id" element={<Crm360Page />} />
-        <Route path="reports" element={<AdminReportsPage />} />
-        <Route path="reports/:type" element={<ReportDetailPage />} />
-        <Route path="analytics" element={<AdminAnalyticsPage />} />
-        <Route path="ai" element={<AdminAiPage />} />
-        <Route path="estimator" element={<AdminEstimatorPage />} />
-        <Route path="hr" element={<AdminHrPage />} />
-        <Route path="users" element={<AdminUsersPage />} />
-        <Route path="audit" element={<AuditLogPage />} />
-        <Route path="settings" element={<AdminSettingsPage />} />
-      </Route>
-
-      <Route
-        path="/manufacturer"
-        element={
-          <Guard allow={['manufacturer', 'admin']}>
-            <ManufacturerLayout />
-          </Guard>
-        }
-      >
-        <Route index element={<ManufacturerPortalPage />} />
-      </Route>
-      <Route
-        path="/warehouse"
-        element={
-          <Guard allow={['warehouse', 'admin']}>
-            <WarehouseLayout />
-          </Guard>
-        }
-      >
-        <Route index element={<WarehouseHome />} />
-        <Route path="receiving" element={<WarehouseReceivingPage />} />
-        <Route path="stock" element={<WarehouseStockPage />} />
-        <Route path="dispatch" element={<WarehouseDispatchPage />} />
-        <Route path="transfers" element={<WarehouseTransfersPage />} />
-        <Route path="scan" element={<WarehouseScanPage />} />
-        <Route path="reports" element={<WarehouseReportsPage />} />
-      </Route>
-
-      <Route
-        path="/fabricator"
-        element={
-          <Guard allow={['fabricator', 'admin']}>
-            <FabricatorLayout />
-          </Guard>
-        }
-      >
-        <Route index element={<FabricatorHome />} />
-        <Route path="leads/:id" element={<FabricatorLeadDetail />} />
-        <Route path="quotes" element={<FabricatorQuotesPage />} />
-        <Route path="jobs" element={<FabricatorJobsPage />} />
-        <Route path="payments" element={<FabricatorPaymentsPage />} />
-        <Route path="reviews" element={<FabricatorReviewsPage />} />
-      </Route>
-
-      <Route
-        path="/driver"
-        element={
-          <Guard allow={['driver', 'admin']}>
-            <DriverLayout />
-          </Guard>
-        }
-      >
-        <Route index element={<DriverHome />} />
-        <Route path="trips/:id" element={<DriverTripDetail />} />
-        <Route path="history" element={<DriverHistoryPage />} />
+        <Route path="wishlists" element={<AdminWishlistsPage />} />
       </Route>
 
       <Route element={<RoleWorkspaceShell />}>
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<UserSettingsPage />} />
         <Route path="/search" element={<GlobalSearchPage />} />
       </Route>
 

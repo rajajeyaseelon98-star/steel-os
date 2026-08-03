@@ -22,36 +22,35 @@ npm run dev
 
 ## Demo
 
-1. Open the app and use **Quick enter as role** on Login.
-2. Walk Journeys A–G from `STEEL-OS-END-TO-END-PLAN.md`.
-3. Use the header **role switcher** during stakeholder demos.
+1. Open the app — role picker has **Super Admin** and **Retail Customer** only.
+2. Retail: catalog → quote / order / wishlist.
+3. Super Admin: accept/dispatch/deliver orders · catalog CRUD · quote templates · all retail wishlists.
+4. Header **role switcher** toggles the two demo users.
 
-### Suggested 8-minute path
+### Suggested path
 
-1. Dealer → catalog → order square pipes  
-2. Contractor → accept quotation QT-2026-001  
-3. Admin → approve / dispatch  
-4. Warehouse → receiving / stock / dispatch  
-5. Fabricator → quote gate lead  
-6. Driver → POD capture  
-7. Admin → finance / pricing  
-8. Admin → G+1 estimator  
+1. Retail → catalog → place order / request quote / wishlist  
+2. Super Admin → Orders → Accept → Dispatch → Mark delivered  
+3. Super Admin → Quote templates → Send to retail  
+4. Super Admin → Wishlists (see retail items)  
+5. Either role → Support FAQ chatbot  
 
 ## Docs
 
-- [`docs/flows/00-INDEX.md`](./docs/flows/00-INDEX.md) — **user-wise & feature flowcharts** (Mermaid, implemented only)
-- `STEEL-OS-END-TO-END-PLAN.md` — full A→Z product plan  
-- `STEEL-OS-KT-DETAIL.md` — KT / completed vs pending status (use this to stay on scope)
+- [`docs/flows/00-INDEX.md`](./docs/flows/00-INDEX.md) — **2-role flow index**
+- `STEEL-OS-END-TO-END-PLAN.md` — original A→Z product plan (broader than current UI)
+- `STEEL-OS-KT-DETAIL.md` — KT / status
 
-## Phases covered
+## Phases covered (current UI)
 
-| Phase | Status |
+| Area | Status |
 |---|---|
-| 1 Customer & Sales | Implemented |
-| 2 Business Operations | Implemented |
-| 3 Fabrication & Logistics | Implemented |
-| 4 Finance | Implemented |
-| 5 Intelligence | Implemented (mock AI + estimator) |
+| Retail browse / quote / order / wishlist | Implemented |
+| Super Admin catalog CRUD | Implemented |
+| Super Admin order ops (accept/reject/dispatch/deliver) | Implemented |
+| Quote templates | Implemented |
+| Admin user-wise wishlists | Implemented |
+| Support FAQ chatbot | Implemented (mock) |
 
 ## Plan document
 

@@ -23,6 +23,13 @@ function uid(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+export interface QuotationTemplate {
+  id: string
+  name: string
+  notes?: string
+  items: { productId: string; qty: number; warehouseId: string }[]
+}
+
 interface ExtrasState {
   addresses: Address[]
   specialPrices: SpecialCustomerPrice[]
@@ -36,6 +43,7 @@ interface ExtrasState {
   warehousesAdmin: Warehouse[]
   estimatorDrafts: EstimatorDraft[]
   permissionOverrides: Record<string, string[]>
+  quotationTemplates: QuotationTemplate[]
 
   addAddress: (a: Omit<Address, 'id'>) => void
   updateAddress: (id: string, patch: Partial<Address>) => void
@@ -56,6 +64,8 @@ interface ExtrasState {
   addWarehouse: (w: Omit<Warehouse, 'id'>) => void
   saveEstimatorDraft: (d: Omit<EstimatorDraft, 'id'>) => EstimatorDraft
   updateEstimatorDraft: (id: string, patch: Partial<EstimatorDraft>) => void
+  upsertQuotationTemplate: (t: QuotationTemplate) => void
+  deleteQuotationTemplate: (id: string) => void
 }
 
 const prefsCache = new Map<string, NotificationPrefs>()
@@ -82,10 +92,10 @@ export const useExtrasStore = createWithEqualityFn<ExtrasState>()(
       specialPrices: [
         {
           id: 'sp-1',
-          customerId: 'u-dealer',
+          customerId: 'u-retail',
           productId: 'p-sq-1',
           price: 760,
-          note: 'Loyalty special for Murugan Hardware',
+          note: 'Loyalty special for retail customer',
         },
       ],
       notificationPrefs: [],
@@ -93,11 +103,11 @@ export const useExtrasStore = createWithEqualityFn<ExtrasState>()(
         {
           id: 'aud-1',
           at: '2026-08-01T10:00:00',
-          actorId: 'u-trader',
+          actorId: 'u-admin',
           action: 'PRICE_UPDATE',
           entity: 'product',
           ref: 'p-sq-1',
-          detail: 'Dealer price adjusted',
+          detail: 'Retail price adjusted',
         },
       ],
       fuelLogs: [
@@ -128,6 +138,17 @@ export const useExtrasStore = createWithEqualityFn<ExtrasState>()(
       warehousesAdmin: warehouseSeed,
       estimatorDrafts: [],
       permissionOverrides: {},
+      quotationTemplates: [
+        {
+          id: 'qtpl-gate',
+          name: 'Retail gate kit',
+          notes: 'Square pipe + hinges starter pack',
+          items: [
+            { productId: 'p-sq-1', qty: 20, warehouseId: 'wh-tnk' },
+            { productId: 'p-acc-hinge', qty: 4, warehouseId: 'wh-tnk' },
+          ],
+        },
+      ],
 
       addAddress: (a) => set((s) => ({ addresses: [{ ...a, id: uid('addr') }, ...s.addresses] })),
       updateAddress: (id, patch) =>
@@ -151,7 +172,7 @@ export const useExtrasStore = createWithEqualityFn<ExtrasState>()(
           }))
         }
         get().addAudit({
-          actorId: 'u-trader',
+          actorId: 'u-admin',
           action: 'SPECIAL_PRICE',
           entity: 'pricing',
           ref: productId,
@@ -213,8 +234,20 @@ export const useExtrasStore = createWithEqualityFn<ExtrasState>()(
         set((s) => ({
           estimatorDrafts: s.estimatorDrafts.map((d) => (d.id === id ? { ...d, ...patch } : d)),
         })),
+
+      upsertQuotationTemplate: (t) =>
+        set((s) => {
+          const exists = s.quotationTemplates.some((x) => x.id === t.id)
+          return {
+            quotationTemplates: exists
+              ? s.quotationTemplates.map((x) => (x.id === t.id ? t : x))
+              : [t, ...s.quotationTemplates],
+          }
+        }),
+      deleteQuotationTemplate: (id) =>
+        set((s) => ({ quotationTemplates: s.quotationTemplates.filter((t) => t.id !== id) })),
     }),
-    { name: 'steel-os-extras' },
+    { name: 'steel-cart-extras-v2' },
   ),
   shallow,
 )

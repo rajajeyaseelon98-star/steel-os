@@ -1,7 +1,7 @@
 # 01 — Auth & Onboarding
 
-**Status:** Implemented (prototype / demo)  
-**Actors:** All roles
+**Status:** Implemented (demo)  
+**Actors:** `super_admin`, `retail` only
 
 ## Entry routes
 
@@ -11,74 +11,37 @@
 | `/login` | `LoginPage` |
 | `/register` | `RegisterPage` |
 | `/otp` | `OtpPage` |
-| `/forgot` | `ForgotPage` |
-| `/reset` | `ResetPage` |
+| `/forgot` / `/reset` | Forgot / Reset (nav only) |
 | `/role` | `RoleSelectPage` |
-| `/verify/gst` | `GstVerifyPage` |
-| `/verify/business` | `BusinessVerifyPage` |
-| `/verify/kyc` | `KycPage` |
-| `/verify/pending` | `VerifyPendingPage` |
-| `/` | `RoleHomeRedirect` → `homePathForRole` |
+| `/verify/*` | GST → business → KYC → pending |
+| `/` | `RoleHomeRedirect` → `/admin` or `/buyer` |
 
 ## Store actions
 
 | Action | Effect |
 |---|---|
-| `loginAs(userId)` | Sets `currentUserId`, returns home path |
+| `loginAs(userId)` | Sets session; home via `homePathForRole` |
 | `logout()` | Clears session |
-| `registerDraft(...)` | Creates draft user for OTP path |
-| `verifyOtp(code)` | Accepts demo code **`123456`** |
-| `setVerification(status)` | `business_pending` → `kyc_pending` → `verified` / `rejected` |
-| `setRoleDemo(role)` | Demo role helpers on some screens |
+| `verifyOtp(code)` | Demo code **`123456`** |
+| `setVerification(status)` | Onboarding chain |
 
-## Step-by-step
+## Step-by-step (primary)
 
-### Path A — Quick demo login (primary)
-
-1. Open `/login`.  
-2. Sign in → role picker modal (or seed quick-enter).  
-3. Select demo user → `loginAs` → land on role home (`/admin`, `/buyer`, …).  
-4. Use TopBar **role switcher** anytime to `loginAs` another seed user.
-
-### Path B — Register → verify (UI chain)
-
-1. `/welcome` → `/register` (dealer / contractor / retail / fabricator / manufacturer).  
-2. `/otp` → enter `123456` → `verifyOtp`.  
-3. `/role` → continue.  
-4. `/verify/gst` → `/verify/business` → `/verify/kyc` → `/verify/pending`.  
-5. Enter workspace → `/` → role home.
-
-### Path C — Forgot / reset (shallow)
-
-1. `/forgot` → `/reset` → back to `/login`.  
-2. **No password store mutation** — navigation only.
+1. `/login` → enter credentials (demo `demo1234`).  
+2. Role picker → **Super Admin** (`u-admin`) or **Retail** (`u-retail`).  
+3. Land on `/admin` or `/buyer`.  
+4. TopBar role switcher can `loginAs` the other seed user.
 
 ## Flowchart
 
 ```mermaid
 flowchart TD
-  W[/welcome] --> L[/login]
-  W --> R[/register]
-  L -->|loginAs| H[Role home]
-  R --> OTP[/otp]
-  OTP -->|verifyOtp 123456| ROLE[/role]
-  ROLE --> GST[/verify/gst]
-  GST --> BIZ[/verify/business]
-  BIZ --> KYC[/verify/kyc]
-  KYC --> PEND[/verify/pending]
-  PEND --> ROOT[/]
-  ROOT --> H
-  L --> FORGOT[/forgot]
-  FORGOT --> RESET[/reset]
-  RESET --> L
+  L[/login] -->|loginAs| P[Role picker]
+  P --> A[/admin]
+  P --> B[/buyer]
 ```
 
 ## Caveats
 
-- Prototype auth — no real OTP/SMS/email.  
-- KYC file inputs are UI-only.  
-- Forgot/reset do not change credentials.
-
-## Cross-links
-
-- After login: [12-shared-shell](./12-shared-shell.md) · role feature docs in [00-INDEX](./00-INDEX.md)
+- No real OTP/SMS. Forgot/reset do not mutate passwords.  
+- Register UI may still mention legacy buyer types; live seeds are admin + retail only.

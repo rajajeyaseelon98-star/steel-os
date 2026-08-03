@@ -108,7 +108,7 @@ export function GlobalSearchPage() {
           </div>
           <div>
             <h3 className="mb-2 text-sm font-semibold">Customers</h3>
-            {userHits.map((u) => <Link key={u.id} className="block rounded-lg px-2 py-1 text-sm text-brand hover:bg-steel-50" to={`/admin/crm/${u.id}`}>{u.companyName}</Link>)}
+            {userHits.map((u) => <Link key={u.id} className="block rounded-lg px-2 py-1 text-sm text-brand hover:bg-steel-50" to="/admin/wishlists">{u.companyName}</Link>)}
           </div>
         </div>
       </Card>
@@ -194,35 +194,42 @@ export function InvoiceDetailPage() {
 export function AdminOrderDetailPage() {
   const { id } = useParams()
   const order = useAppStore((s) => s.orders.find((o) => o.id === id))
-  const user = useAppStore((s) => s.currentUser())!
+  const customer = useAppStore((s) => s.users.find((u) => u.id === order?.customerId))
   const approveOrder = useAppStore((s) => s.approveOrder)
   const cancelOrder = useAppStore((s) => s.cancelOrder)
   const requestReturn = useAppStore((s) => s.requestReturn)
   const refundOrder = useAppStore((s) => s.refundOrder)
-  const partialDispatchOrder = useAppStore((s) => s.partialDispatchOrder)
   const dispatchOrder = useAppStore((s) => s.dispatchOrder)
+  const markOrderDelivered = useAppStore((s) => s.markOrderDelivered)
   if (!order) return <Empty title="Order not found" />
   return (
     <div>
       <PageHeader
         title={order.number}
-        subtitle="Admin order detail"
-        actions={<Link to={`/buyer/orders/${order.id}`}><Button variant="ghost">Buyer view</Button></Link>}
+        subtitle={`${customer?.name ?? order.customerId} · Super Admin order ops`}
+        actions={<Link to={`/buyer/orders/${order.id}`}><Button variant="ghost">Customer view</Button></Link>}
       />
       <Card className="mb-4">
         <StatusBadge status={order.status} />
-        <div className="mt-2 text-sm">Total {inr(orderTotals(order.items).total)} · Customer {order.customerId}</div>
+        <div className="mt-2 text-sm">Total {inr(orderTotals(order.items).total)}</div>
         <div className="mt-4 flex flex-wrap gap-2">
-          {can(user.role, 'dispatch') && order.status === 'pending_approval' ? <Button onClick={() => approveOrder(order.id)}>Approve</Button> : null}
-          {can(user.role, 'dispatch') && order.status === 'approved' ? (
+          {order.status === 'pending_approval' ? (
             <>
-              <Button onClick={() => dispatchOrder(order.id, 'v-1', 'drv-1')}>Full dispatch</Button>
-              <Button variant="secondary" onClick={() => partialDispatchOrder(order.id, 'v-1', 'drv-1')}>Partial dispatch</Button>
+              <Button onClick={() => approveOrder(order.id)}>Accept</Button>
+              <Button variant="danger" onClick={() => cancelOrder(order.id)}>Reject</Button>
             </>
+          ) : null}
+          {order.status === 'approved' || order.status === 'partially_dispatched' ? (
+            <Button onClick={() => dispatchOrder(order.id, 'v-1', 'drv-1')}>Dispatch</Button>
+          ) : null}
+          {['dispatched', 'partially_dispatched'].includes(order.status) ? (
+            <Button variant="secondary" onClick={() => markOrderDelivered(order.id)}>Mark delivered</Button>
           ) : null}
           {['delivered', 'completed'].includes(order.status) ? <Button variant="ghost" onClick={() => requestReturn(order.id)}>Request return</Button> : null}
           {order.status === 'return_requested' ? <Button variant="danger" onClick={() => refundOrder(order.id)}>Refund</Button> : null}
-          {!['cancelled', 'refunded', 'completed'].includes(order.status) ? <Button variant="danger" onClick={() => cancelOrder(order.id)}>Cancel</Button> : null}
+          {!['cancelled', 'refunded', 'completed', 'delivered'].includes(order.status) && order.status !== 'pending_approval' ? (
+            <Button variant="danger" onClick={() => cancelOrder(order.id)}>Cancel</Button>
+          ) : null}
         </div>
       </Card>
     </div>
@@ -253,7 +260,7 @@ export function AdminCatalogMetaPage() {
         <Card>
           <h3 className="mb-2 font-semibold">Warehouses</h3>
           <ul className="mb-3 space-y-1 text-sm">{warehousesAdmin.map((w) => <li key={w.id}>{w.name} · {w.city}</li>)}</ul>
-          {can(user.role, 'manage_inventory') ? (
+          {can(user.role, 'manage_products') ? (
             <div className="space-y-2">
               <Input placeholder="New warehouse name" value={whName} onChange={(e) => setWhName(e.target.value)} />
               <Input value={whCity} onChange={(e) => setWhCity(e.target.value)} />
@@ -284,7 +291,7 @@ export function AuditLogPage() {
 }
 
 export function SpecialPricingPage() {
-  const users = useAppStore((s) => s.users.filter((u) => ['dealer', 'contractor', 'retail'].includes(u.role)))
+  const users = useAppStore((s) => s.users.filter((u) => u.role === 'retail'))
   const products = useAppStore((s) => s.products)
   const specialPrices = useExtrasStore((s) => s.specialPrices)
   const setSpecialPrice = useExtrasStore((s) => s.setSpecialPrice)
@@ -452,4 +459,119 @@ export function CanGate({ capability, children }: { capability: Capability; chil
     return <Empty title="Permission denied" body={`Requires: ${capabilityLabels[capability]}`} />
   }
   return children
+}
+
+export function AdminWishlistsPage() {
+  const users = useAppStore((s) => s.users.filter((u) => u.role === 'retail'))
+  const wishlists = useAppStore((s) => s.wishlists)
+  const products = useAppStore((s) => s.products)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Customer wishlists" subtitle="All retail customer wishlists" />
+      {users.map((u) => {
+        const ids = wishlists[u.id] ?? []
+        const items = products.filter((p) => ids.includes(p.id))
+        return (
+          <Card key={u.id}>
+            <h3 className="font-semibold">{u.name} · {u.email}</h3>
+            <p className="text-xs text-text-secondary">{ids.length} item(s)</p>
+            {!items.length ? (
+              <p className="mt-2 text-sm text-text-secondary">Empty wishlist</p>
+            ) : (
+              <ul className="mt-3 space-y-2 text-sm">
+                {items.map((p) => (
+                  <li key={p.id} className="flex justify-between gap-2 border-b border-border-section py-2">
+                    <span>{p.name}</span>
+                    <Link className="text-brand" to={`/buyer/products/${p.id}`}>View</Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        )
+      })}
+    </div>
+  )
+}
+
+export function QuotationTemplatesPage() {
+  const templates = useExtrasStore((s) => s.quotationTemplates)
+  const upsert = useExtrasStore((s) => s.upsertQuotationTemplate)
+  const remove = useExtrasStore((s) => s.deleteQuotationTemplate)
+  const products = useAppStore((s) => s.products)
+  const createQuotation = useAppStore((s) => s.createQuotation)
+  const sendQuotation = useAppStore((s) => s.sendQuotation)
+  const [name, setName] = useState('')
+  const [productId, setProductId] = useState(products[0]?.id ?? '')
+  const [qty, setQty] = useState(10)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Quotation templates" subtitle="CRUD · create quote for retail from template" />
+      <Card>
+        <h3 className="font-semibold">New template</h3>
+        <div className="mt-3 grid gap-3 md:grid-cols-4">
+          <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
+          <Field label="Product">
+            <Select value={productId} onChange={(e) => setProductId(e.target.value)}>
+              {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </Select>
+          </Field>
+          <Field label="Qty"><Input type="number" value={qty} onChange={(e) => setQty(Number(e.target.value))} /></Field>
+          <div className="flex items-end">
+            <Button
+              onClick={() => {
+                if (!name || !productId) return
+                upsert({
+                  id: `qtpl-${Date.now().toString(36)}`,
+                  name,
+                  items: [{ productId, qty, warehouseId: 'wh-tnk' }],
+                })
+                setName('')
+              }}
+            >
+              Save template
+            </Button>
+          </div>
+        </div>
+      </Card>
+      <Table
+        headers={['Name', 'Lines', 'Actions']}
+        rows={templates.map((t) => [
+          t.name,
+          t.items.map((i) => `${products.find((p) => p.id === i.productId)?.name ?? i.productId} × ${i.qty}`).join(', '),
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => {
+                const productMap = Object.fromEntries(products.map((p) => [p.id, p]))
+                const items = t.items.map((i) => {
+                  const p = productMap[i.productId]
+                  return {
+                    productId: i.productId,
+                    warehouseId: i.warehouseId,
+                    qty: i.qty,
+                    unitPrice: p?.prices.retail ?? 0,
+                    priceType: 'retail' as const,
+                    gstPercent: p?.gstPercent ?? 18,
+                  }
+                })
+                const q = createQuotation({
+                  customerId: 'u-retail',
+                  items,
+                  validityDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+                  notes: t.notes ?? t.name,
+                  projectName: t.name,
+                })
+                sendQuotation(q.id)
+              }}
+            >
+              Send to retail
+            </Button>
+            <Button variant="danger" onClick={() => remove(t.id)}>Delete</Button>
+          </div>,
+        ])}
+      />
+    </div>
+  )
 }

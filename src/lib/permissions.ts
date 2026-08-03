@@ -6,63 +6,36 @@ export type Capability =
   | 'manage_pricing'
   | 'create_quotation'
   | 'place_order'
-  | 'manage_inventory'
   | 'dispatch'
-  | 'delivery_pod'
-  | 'fabrication_leads'
   | 'finance'
-  | 'reports'
   | 'settings'
-  | 'manage_vendors'
   | 'view_audit'
-  | 'manufacturer_portal'
 
+/** Two-role prototype: Super Admin + Retail only. */
 export const permissionMatrix: Record<Capability, Role[]> = {
-  manage_users: ['super_admin', 'master_trader'],
-  manage_products: ['super_admin', 'master_trader', 'manufacturer'],
-  manage_pricing: ['super_admin', 'master_trader'],
-  create_quotation: ['super_admin', 'master_trader', 'dealer', 'fabricator'],
-  place_order: ['super_admin', 'master_trader', 'dealer', 'contractor', 'retail', 'fabricator'],
-  manage_inventory: ['super_admin', 'master_trader', 'warehouse_manager'],
-  dispatch: ['super_admin', 'master_trader', 'warehouse_manager'],
-  delivery_pod: ['super_admin', 'master_trader', 'warehouse_manager', 'driver', 'dealer', 'contractor', 'retail'],
-  fabrication_leads: ['super_admin', 'master_trader', 'fabricator', 'dealer', 'contractor', 'retail'],
-  finance: ['super_admin', 'master_trader', 'dealer', 'contractor', 'retail', 'fabricator', 'manufacturer', 'driver'],
-  reports: ['super_admin', 'master_trader', 'warehouse_manager', 'dealer', 'contractor', 'fabricator', 'driver', 'manufacturer'],
-  settings: ['super_admin', 'master_trader'],
-  manage_vendors: ['super_admin', 'master_trader'],
-  view_audit: ['super_admin', 'master_trader'],
-  manufacturer_portal: ['manufacturer', 'super_admin', 'master_trader'],
+  manage_users: ['super_admin'],
+  manage_products: ['super_admin'],
+  manage_pricing: ['super_admin'],
+  create_quotation: ['super_admin', 'retail'],
+  place_order: ['super_admin', 'retail'],
+  dispatch: ['super_admin'],
+  finance: ['super_admin', 'retail'],
+  settings: ['super_admin'],
+  view_audit: ['super_admin'],
 }
 
 export function can(role: Role, capability: Capability) {
   return permissionMatrix[capability].includes(role)
 }
 
-export type Workspace = 'admin' | 'buyer' | 'warehouse' | 'fabricator' | 'driver' | 'manufacturer'
+export type Workspace = 'admin' | 'buyer'
 
 export function workspaceForRole(role: Role): Workspace {
-  switch (role) {
-    case 'super_admin':
-    case 'master_trader':
-      return 'admin'
-    case 'manufacturer':
-      return 'manufacturer'
-    case 'warehouse_manager':
-      return 'warehouse'
-    case 'fabricator':
-      return 'fabricator'
-    case 'driver':
-      return 'driver'
-    default:
-      return 'buyer'
-  }
+  return role === 'super_admin' ? 'admin' : 'buyer'
 }
 
 export function homePathForRole(role: Role) {
-  const ws = workspaceForRole(role)
-  if (ws === 'manufacturer') return '/manufacturer'
-  return `/${ws}`
+  return `/${workspaceForRole(role)}`
 }
 
 export const roleLabels: Record<Role, string> = {
@@ -83,14 +56,11 @@ export const capabilityLabels: Record<Capability, string> = {
   manage_pricing: 'Manage pricing',
   create_quotation: 'Create quotation',
   place_order: 'Place order',
-  manage_inventory: 'Manage inventory',
-  dispatch: 'Dispatch / GRN',
-  delivery_pod: 'Delivery POD',
-  fabrication_leads: 'Fabrication leads',
-  finance: 'Finance / ledger',
-  reports: 'Reports / analytics',
+  dispatch: 'Dispatch / process orders',
+  finance: 'Finance',
   settings: 'Settings',
-  manage_vendors: 'Vendor management',
-  view_audit: 'Audit logs',
-  manufacturer_portal: 'Manufacturer portal',
+  view_audit: 'View audit',
 }
+
+/** Demo role switcher — only the two live users. */
+export const demoRoles: Role[] = ['super_admin', 'retail']

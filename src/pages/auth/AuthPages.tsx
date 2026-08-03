@@ -9,13 +9,13 @@ import { users } from '@/mock/data'
 export function WelcomePage() {
   return (
     <Card className="w-full bg-white/95">
-      <h2 className="text-xl font-semibold text-steel-900">Enter the operating system</h2>
+      <h2 className="text-xl font-semibold text-steel-900">Enter Steel Cart</h2>
       <p className="mt-2 text-sm text-steel-500">
-        Clickable multi-role prototype covering catalog, quotations, inventory, fabrication, delivery, and finance.
+        Two-role prototype: Retail Customer and Super Admin — catalog, quotations, orders, wishlists.
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
         <Link to="/login"><Button>Login</Button></Link>
-        <Link to="/register"><Button variant="secondary">Register business</Button></Link>
+        <Link to="/register"><Button variant="secondary">Register</Button></Link>
       </div>
     </Card>
   )
@@ -24,13 +24,13 @@ export function WelcomePage() {
 export function LoginPage() {
   const loginAs = useAppStore((s) => s.loginAs)
   const navigate = useNavigate()
-  const [email, setEmail] = useState('murugan@hardware.in')
+  const [email, setEmail] = useState('priya@gmail.com')
   const [password, setPassword] = useState('demo1234')
   const [error, setError] = useState('')
   const [showRoleModal, setShowRoleModal] = useState(false)
 
   const openRolePicker = () => {
-    // Prototype: accept demo password; match email or fall back to dealer seed
+    // Prototype: accept demo password; then pick Super Admin or Retail
     if (password && password !== 'demo1234') {
       setError('Invalid password. Use demo1234 for prototype.')
       return
@@ -131,7 +131,7 @@ export function RegisterPage() {
     companyName: '',
     gstin: '',
     city: 'Tenkasi',
-    role: 'dealer' as Role,
+    role: 'retail' as Role,
   })
 
   return (
@@ -146,7 +146,7 @@ export function RegisterPage() {
         <Field label="GSTIN"><Input value={form.gstin} onChange={(e) => setForm({ ...form, gstin: e.target.value })} /></Field>
         <Field label="Role">
           <Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
-            {(['dealer', 'contractor', 'retail', 'fabricator', 'manufacturer'] as Role[]).map((r) => (
+            {(['retail'] as Role[]).map((r) => (
               <option key={r} value={r}>{roleLabels[r]}</option>
             ))}
           </Select>

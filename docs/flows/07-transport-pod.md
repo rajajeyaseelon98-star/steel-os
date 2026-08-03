@@ -1,8 +1,10 @@
 # 07 — Transport & POD
 
-**Status:** Implemented  
-**Actors:** Admin, Warehouse, Driver  
-**Journey:** **D** (delivery lane)
+> **OUT OF SCOPE (2-role trim).** Delivery is Admin **Mark delivered** — see [04](./04-orders-fulfillment.md).
+
+**Status:** Removed from live UI  
+**Actors:** ~~Admin, Warehouse, Driver~~  
+**Journey:** **D** (archived)
 
 ## Entry routes
 

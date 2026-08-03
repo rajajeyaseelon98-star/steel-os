@@ -447,7 +447,6 @@ export function NotificationsPage() {
       <PageHeader
         title="Notifications"
         subtitle="WhatsApp · SMS · Email · Push represented in-app"
-        actions={<Link to="/settings"><Button variant="ghost">Preferences</Button></Link>}
       />
       <div className="space-y-3">
         {notifications.map((n) => (
@@ -469,12 +468,60 @@ export function NotificationsPage() {
 }
 
 export function SupportPage() {
+  const faqs = [
+    { q: 'How do I request a quotation?', a: 'Open Catalog → product → Request quotation, or ask Super Admin to send a quote from a template.' },
+    { q: 'How do I place an order?', a: 'Open a product and Place order. Super Admin will Accept, Dispatch, then Mark delivered.' },
+    { q: 'Where is my wishlist?', a: 'Retail: Wishlist in the side nav. Super Admin can see all retail wishlists under Wishlists.' },
+    { q: 'Who processes dispatch?', a: 'Only Super Admin — there is no separate warehouse or driver app in this prototype.' },
+  ]
+  const [active, setActive] = useState<number | null>(0)
+  const [custom, setCustom] = useState('')
+  const [reply, setReply] = useState('Pick a suggested question or type your own.')
+
   return (
-    <div className="mx-auto max-w-3xl p-4">
-      <PageHeader title="Support" subtitle="Prototype help desk" />
+    <div className="mx-auto max-w-3xl">
+      <PageHeader title="Support" subtitle="FAQ chatbot (prototype — no live AI)" />
       <Card>
-        <p className="text-sm text-steel-600">Call +91 98765 00000 · WhatsApp desk · Email support@steelos.in</p>
-        <p className="mt-2 text-sm text-steel-500">For demos, use the role switcher in the header to walk Journeys A–G.</p>
+        <div className="flex flex-wrap gap-2">
+          {faqs.map((f, i) => (
+            <Button
+              key={f.q}
+              variant={active === i ? 'primary' : 'outline'}
+              onClick={() => {
+                setActive(i)
+                setReply(f.a)
+              }}
+            >
+              {f.q}
+            </Button>
+          ))}
+        </div>
+        <div className="mt-4 rounded-lg bg-surface-muted p-4 text-sm text-text-primary">{reply}</div>
+        <div className="mt-4 flex gap-2">
+          <Input
+            placeholder="Type a question…"
+            value={custom}
+            onChange={(e) => setCustom(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && custom.trim()) {
+                const hit = faqs.find((f) => f.q.toLowerCase().includes(custom.toLowerCase().slice(0, 12)))
+                setReply(hit?.a ?? 'Thanks — for demos use Catalog, Quotations, Orders, and Wishlists. Call +91 98765 00000 for human help.')
+                setCustom('')
+              }
+            }}
+          />
+          <Button
+            onClick={() => {
+              if (!custom.trim()) return
+              const hit = faqs.find((f) => custom.toLowerCase().includes('order') ? f.q.includes('order') : custom.toLowerCase().includes('wish') ? f.q.includes('wishlist') : false)
+              setReply(hit?.a ?? 'Thanks — for demos use Catalog, Quotations, Orders, and Wishlists. Call +91 98765 00000 for human help.')
+              setCustom('')
+            }}
+          >
+            Ask
+          </Button>
+        </div>
+        <p className="mt-3 text-xs text-text-secondary">Call +91 98765 00000 · support@steelos.in</p>
       </Card>
     </div>
   )

@@ -2,14 +2,7 @@ import type { PriceType, Product, Role, User } from '@/types'
 
 const roleDefaultPrice: Partial<Record<Role, PriceType>> = {
   retail: 'retail',
-  dealer: 'dealer',
-  contractor: 'contractor',
-  manufacturer: 'wholesale',
-  master_trader: 'wholesale',
   super_admin: 'wholesale',
-  warehouse_manager: 'wholesale',
-  fabricator: 'wholesale',
-  driver: 'retail',
 }
 
 export function defaultPriceTypeForRole(role: Role): PriceType {
@@ -17,11 +10,11 @@ export function defaultPriceTypeForRole(role: Role): PriceType {
 }
 
 /**
- * Part N precedence:
- * 1. Special Customer Price (if exists)
- * 2. Project Price (when override/project context)
+ * Part N precedence (2-role prototype):
+ * 1. Special Customer Price
+ * 2. Override / project
  * 3. Role default
- * 4. Fallback list (retail)
+ * 4. Retail fallback
  */
 export function resolveUnitPrice(
   product: Product,

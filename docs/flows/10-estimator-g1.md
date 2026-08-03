@@ -1,8 +1,10 @@
 # 10 — Estimator G+1
 
-**Status:** Implemented (with shallow schedule step)  
-**Actors:** Admin (`super_admin`, `master_trader`)  
-**Journey:** **G**
+> **OUT OF SCOPE (2-role trim).** Historical only — see [99](./99-gaps-and-stubs.md).
+
+**Status:** Removed from live UI  
+**Actors:** ~~Admin~~  
+**Journey:** **G** (archived)
 
 ## Entry routes
 

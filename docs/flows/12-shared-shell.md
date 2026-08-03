@@ -1,7 +1,9 @@
 # 12 — Shared Shell Pages
 
-**Status:** Implemented (inside `RoleWorkspaceShell` — sticky nav preserved)  
-**Actors:** Any authenticated role (chrome = current workspace nav)
+> **Partially outdated (2-role trim).** Live shared routes: `/search` · `/profile` · `/notifications` · `/support`. **`/settings` removed.**
+
+**Status:** Partial — `/settings` gone  
+**Actors:** `super_admin`, `retail`
 
 ## Entry routes
 

@@ -1,8 +1,10 @@
 # 09 — Fabrication Marketplace
 
-**Status:** Implemented  
-**Actors:** Buyer (`dealer` / `contractor` / `retail`), `fabricator`  
-**Journey:** **C**
+> **OUT OF SCOPE (2-role trim).** Historical only — see [99](./99-gaps-and-stubs.md).
+
+**Status:** Removed from live UI  
+**Actors:** ~~Buyer, fabricator~~  
+**Journey:** **C** (archived)
 
 ## Entry routes
 

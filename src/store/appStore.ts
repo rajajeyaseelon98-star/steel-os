@@ -91,7 +91,8 @@ interface AppState {
   employees: Employee[]
   attendance: AttendanceRecord[]
   company: CompanySettings
-  wishlist: string[]
+  /** userId → productIds */
+  wishlists: Record<string, string[]>
   otpCode: string | null
   pendingRegister: Partial<User> | null
 
@@ -106,6 +107,8 @@ interface AppState {
   getProduct: (id: string) => Product | undefined
   availableQty: (productId: string, warehouseId: string) => number
   updatePrice: (productId: string, priceType: PriceType, value: number) => void
+  upsertProduct: (product: Product) => void
+  deleteProduct: (productId: string) => void
 
   createQuotation: (input: {
     customerId: string
@@ -140,6 +143,7 @@ interface AppState {
   confirmLoading: (tripId: string) => void
   updateTripStatus: (tripId: string, status: DeliveryTrip['status']) => void
   submitPod: (tripId: string, signature: string, photoNote: string) => void
+  markOrderDelivered: (orderId: string) => void
 
   createTransfer: (from: string, to: string, productId: string, qty: number) => void
   receiveTransfer: (id: string) => void
@@ -164,6 +168,7 @@ interface AppState {
   }) => void
 
   toggleWishlist: (productId: string) => void
+  wishlistFor: (userId: string) => string[]
   markNotificationRead: (id: string) => void
   addNotification: (n: Omit<NotificationItem, 'id' | 'at' | 'read'>) => void
   addCrmActivity: (a: Omit<CrmActivity, 'id' | 'at'>) => void
@@ -199,7 +204,7 @@ export const useAppStore = createWithEqualityFn<AppState>()(
       employees: employeesSeed,
       attendance: attendanceSeed,
       company: companySeed,
-      wishlist: wishlistSeed,
+      wishlists: wishlistSeed,
       otpCode: null,
       pendingRegister: null,
 
@@ -282,7 +287,7 @@ export const useAppStore = createWithEqualityFn<AppState>()(
           ),
         }))
         get().addNotification({
-          userId: 'u-dealer',
+          userId: 'u-retail',
           title: 'Price Changed',
           body: `Price updated for ${get().getProduct(productId)?.name ?? productId}`,
           channel: 'in_app',
@@ -290,17 +295,29 @@ export const useAppStore = createWithEqualityFn<AppState>()(
         })
       },
 
+      upsertProduct: (product) => {
+        set((s) => {
+          const exists = s.products.some((p) => p.id === product.id)
+          return {
+            products: exists
+              ? s.products.map((p) => (p.id === product.id ? product : p))
+              : [product, ...s.products],
+          }
+        })
+      },
+
+      deleteProduct: (productId) => {
+        set((s) => ({ products: s.products.filter((p) => p.id !== productId) }))
+      },
+
       createQuotation: (input) => {
         const user = get().currentUser()
-        const selfServe =
-          !!user &&
-          user.id === input.customerId &&
-          ['dealer', 'contractor', 'retail'].includes(user.role)
+        const selfServe = !!user && user.id === input.customerId && user.role === 'retail'
         const q: Quotation = {
           id: uid('q'),
           number: `QT-2026-${String(get().quotations.length + 1).padStart(3, '0')}`,
           customerId: input.customerId,
-          createdBy: user?.id ?? 'u-trader',
+          createdBy: user?.id ?? 'u-admin',
           status: selfServe ? 'sent' : 'draft',
           items: input.items,
           validityDate: input.validityDate,
@@ -311,7 +328,7 @@ export const useAppStore = createWithEqualityFn<AppState>()(
         set((s) => ({ quotations: [q, ...s.quotations] }))
         if (selfServe) {
           get().addNotification({
-            userId: 'u-trader',
+            userId: 'u-admin',
             title: 'Customer quotation request',
             body: `${q.number} sent for review / acceptance`,
             channel: 'in_app',
@@ -418,7 +435,7 @@ export const useAppStore = createWithEqualityFn<AppState>()(
         }
         set((s) => ({ orders: [order, ...s.orders] }))
         get().addNotification({
-          userId: 'u-trader',
+          userId: 'u-admin',
           title: 'New order',
           body: `${order.number} awaiting approval`,
           channel: 'in_app',
@@ -499,7 +516,7 @@ export const useAppStore = createWithEqualityFn<AppState>()(
         const order = get().orders.find((o) => o.id === id)
         if (order) {
           get().addNotification({
-            userId: 'u-trader',
+            userId: 'u-admin',
             title: 'Return requested',
             body: `${order.number} return requested`,
             channel: 'in_app',
@@ -668,6 +685,29 @@ export const useAppStore = createWithEqualityFn<AppState>()(
             title: 'Delivered',
             body: `${order.number} delivered. POD captured.`,
             channel: 'whatsapp',
+            link: `/buyer/orders/${order.id}`,
+          })
+        }
+      },
+
+      markOrderDelivered: (orderId) => {
+        const trip = get().trips.find((t) => t.orderId === orderId && t.status !== 'delivered')
+        if (trip) {
+          get().submitPod(trip.id, 'Admin POD', 'admin-delivered')
+          return
+        }
+        set((s) => ({
+          orders: s.orders.map((o) =>
+            o.id === orderId ? { ...o, status: 'delivered', updatedAt: now() } : o,
+          ),
+        }))
+        const order = get().orders.find((o) => o.id === orderId)
+        if (order) {
+          get().addNotification({
+            userId: order.customerId,
+            title: 'Delivered',
+            body: `${order.number} marked delivered by admin.`,
+            channel: 'in_app',
             link: `/buyer/orders/${order.id}`,
           })
         }
@@ -935,7 +975,7 @@ export const useAppStore = createWithEqualityFn<AppState>()(
           method,
           at: now(),
           note,
-          recordedBy: get().currentUserId ?? 'u-trader',
+          recordedBy: get().currentUserId ?? 'u-admin',
         }
         set((s) => ({
           payments: [payment, ...s.payments],
@@ -976,12 +1016,18 @@ export const useAppStore = createWithEqualityFn<AppState>()(
       },
 
       toggleWishlist: (productId) => {
-        set((s) => ({
-          wishlist: s.wishlist.includes(productId)
-            ? s.wishlist.filter((id) => id !== productId)
-            : [...s.wishlist, productId],
-        }))
+        const userId = get().currentUserId
+        if (!userId) return
+        set((s) => {
+          const current = s.wishlists[userId] ?? []
+          const next = current.includes(productId)
+            ? current.filter((id) => id !== productId)
+            : [...current, productId]
+          return { wishlists: { ...s.wishlists, [userId]: next } }
+        })
       },
+
+      wishlistFor: (userId) => get().wishlists[userId] ?? [],
 
       markNotificationRead: (id) => {
         set((s) => ({
@@ -1042,7 +1088,7 @@ export const useAppStore = createWithEqualityFn<AppState>()(
       },
     }),
     {
-      name: 'steel-os-prototype',
+      name: 'steel-cart-v2',
       partialize: (s) => ({
         currentUserId: s.currentUserId,
         users: s.users,
@@ -1064,7 +1110,7 @@ export const useAppStore = createWithEqualityFn<AppState>()(
         stockTransfers: s.stockTransfers,
         crmActivities: s.crmActivities,
         notifications: s.notifications,
-        wishlist: s.wishlist,
+        wishlists: s.wishlists,
         company: s.company,
       }),
     },

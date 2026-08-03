@@ -1,7 +1,9 @@
 # 13 — Manufacturer Portal
 
-**Status:** Display-only shell (**not** a full mutation journey)  
-**Actors:** `manufacturer` (Admin Guard may enter for demo)
+> **OUT OF SCOPE (2-role trim).** Historical only — see [99](./99-gaps-and-stubs.md).
+
+**Status:** Removed from live UI  
+**Actors:** ~~manufacturer~~
 
 ## Entry routes
 

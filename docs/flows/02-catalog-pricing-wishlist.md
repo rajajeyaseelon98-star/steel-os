@@ -1,8 +1,7 @@
 # 02 — Catalog, Pricing & Wishlist
 
-**Status:** Implemented (buyer browse + order/quote CTAs)  
-**Actors:** `dealer`, `contractor`, `retail` (buyer workspace); admin may browse via Guard  
-**Journey:** Supports **A** (reorder starts here)
+**Status:** Implemented  
+**Actors:** Retail (browse/order); Super Admin (CRUD + browse)
 
 ## Entry routes
 
@@ -12,54 +11,32 @@
 | `/buyer/catalog` | `CatalogPage` |
 | `/buyer/products/:id` | `ProductDetailPage` |
 | `/buyer/wishlist` | `WishlistPage` |
-| `/admin/products` | `AdminProductsPage` *(list-only — see gaps)* |
+| `/admin/products` | Admin product list + CRUD |
 | `/search` | `GlobalSearchPage` |
 
-## Store / libs
+## Store
 
 | Piece | Role |
 |---|---|
-| `usePriceForProduct` / `pricing.ts` | Role + special-price precedence (Part N) |
-| `availableQty` | On-hand minus reserved by warehouse |
-| `toggleWishlist` | Wishlist add/remove |
-| `createOrder` | Place order from product detail |
-| `createQuotation` | Request quotation from product detail (buyer path) |
+| `usePriceForProduct` / `pricing.ts` | Role pricing |
+| `wishlists: Record<userId, productIds>` | Per-user lists |
+| `toggleWishlist` | Retail toggles own list |
+| `createOrder` / `createQuotation` | From product detail |
+| Product CRUD actions | Admin only |
 
-## Step-by-step (Buyer)
+## Step-by-step
 
-1. Land `/buyer` — KPI strip + offers.  
-2. Open `/buyer/catalog` — filter category / search.  
-3. Open `/buyer/products/:id` — see role price, warehouses, qty.  
-4. Choose action:  
-   - **Place order** → `createOrder` → `/buyer/orders/:id` ([04](./04-orders-fulfillment.md))  
-   - **Request quotation** → quotation draft/sent path ([03](./03-quotations.md))  
-   - **Wishlist** → `toggleWishlist` → `/buyer/wishlist`  
-5. Optional: `/search` for products / orders / customers.
+1. Retail: `/buyer/catalog` → product → place order, request quote, or wishlist.  
+2. Admin: `/admin/products` — create / edit / deactivate products.  
+3. Admin: `/admin/wishlists` — see all retail wishlists ([05](./05-admin-wishlists-templates.md)).
 
 ## Flowchart
 
 ```mermaid
 flowchart TD
-  subgraph Buyer
-    H[/buyer] --> C[/buyer/catalog]
-    C --> P[/buyer/products/:id]
-    P -->|createOrder| O[/buyer/orders/:id]
-    P -->|createQuotation| Q[/buyer/quotations]
-    P -->|toggleWishlist| W[/buyer/wishlist]
-    H --> S[/search]
-  end
-  subgraph Pricing["pricing.ts"]
-    P --> PRICE[role / special / matrix price]
-    P --> QTY[availableQty]
-  end
+  C[/buyer/catalog] --> P[/buyer/products/:id]
+  P -->|createOrder| O[Orders flow 04]
+  P -->|createQuotation| Q[Quotes flow 03]
+  P -->|toggleWishlist| W[/buyer/wishlist]
+  W -.-> A[/admin/wishlists]
 ```
-
-## Caveats
-
-- Product “images” are emoji placeholders.  
-- Admin products page does not create/edit SKUs.  
-- Special customer prices are managed under admin ([11](./11-crm-hr-admin-ops.md)).
-
-## Cross-links
-
-- [03-quotations](./03-quotations.md) · [04-orders-fulfillment](./04-orders-fulfillment.md) · [12-shared-shell](./12-shared-shell.md)

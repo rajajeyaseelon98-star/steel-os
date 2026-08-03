@@ -8,11 +8,11 @@
 |---|---|
 | **Document type** | KT / status handoff (in-session) |
 | **Document date** | 2026-08-02 |
-| **Product** | Steel Cart — South Tamil Nadu steel + fabrication B2B operating system **prototype** (not production ERP) |
+| **Product** | Steel Cart — **2-role prototype** (Retail Customer + Super Admin) |
 | **Repo** | https://github.com/rajajeyaseelon98-star/steel-os |
 | **Local path** | `C:\Users\Lenovo\steel cart\steel-os` |
 | **Master plan** | `STEEL-OS-END-TO-END-PLAN.md` |
-| **User/feature flows** | `docs/flows/00-INDEX.md` (Mermaid, implemented-only) |
+| **User/feature flows** | `docs/flows/00-INDEX.md` (2-role) |
 | **Stack (locked)** | React + TypeScript + Vite + React Router + Zustand + Tailwind CSS v4 + Recharts |
 | **Not Next.js** | Explicitly React SPA only |
 
